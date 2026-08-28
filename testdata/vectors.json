@@ -1,0 +1,162 @@
+{
+  "_comment": [
+    "Canonical-form conformance vectors for Agoreum settlement receipts.",
+    "",
+    "Every implementation of the published verification rule must turn each",
+    "`value` below into exactly the `canonical` string. There are four:",
+    "the API that signs (Python), the browser verifier (TypeScript), and the",
+    "Python, TypeScript and Go SDKs.",
+    "",
+    "This file exists because the rule has now been under-specified three",
+    "times, and every one was found by writing another implementation rather",
+    "than by reading the sentence again:",
+    "",
+    "  1. Escaping. Python escaped non-ASCII to \\uXXXX by default and",
+    "     JavaScript never has, so any accented character diverged.",
+    "  2. Collation. `keys sorted` did not say sorted by what. JavaScript",
+    "     compares UTF-16 code units, Python and Go order by code point, and",
+    "     they disagree above U+FFFF.",
+    "  3. Numbers. Python writes 1.0 where JavaScript and Go write 1, Python",
+    "     writes 1e-07 where they write 1e-7, and integers past 2^53 lose",
+    "     precision in a parser backed by doubles.",
+    "",
+    "Each of those was unreachable when found: no receipt carried an accent,",
+    "a data-derived key, or a float. That is the point. They would have",
+    "surfaced as a genuine receipt whose signature did not verify, and the",
+    "reasonable reaction to that is to stop checking signatures.",
+    "",
+    "`canonical` is the exact string that gets UTF-8 encoded and signed. It is",
+    "written here as a literal rather than computed by any implementation, so",
+    "that all four are pinned to the same constant instead of agreeing with",
+    "each other and with nothing else.",
+    "",
+    "`rejected` cases must be refused rather than canonicalised, because their",
+    "canonical form is not the same in every language.",
+    "",
+    "`detectable_by` says which implementations can actually assert a case, and",
+    "the reason is worth understanding rather than working around. JSON does",
+    "not distinguish 1.0 from 1, so by the time a value has been through a",
+    "parser the evidence may be gone:",
+    "",
+    "  - `{\"a\":1.0}` reaches Python as a float and JavaScript as the integer",
+    "    1. Only Python can see it, and only Python needs to: JavaScript would",
+    "    write `1`, which is what a correct signer would have signed anyway.",
+    "  - `{\"a\":0.1}` is a non-integer everywhere, so every implementation can",
+    "    refuse it.",
+    "  - `{\"a\":9007199254740993}` reaches JavaScript as 9007199254740992. The",
+    "    parser rounded it before any check could run, so a verifier cannot",
+    "    detect it at all.",
+    "",
+    "That last one is the architectural point: **the safe-integer rule can only",
+    "be enforced where the receipt is created.** A verifier is handed a value",
+    "whose corruption already happened. So the signer refuses, and the",
+    "verifiers assert what they can still see."
+  ],
+  "accepted": [
+    {
+      "name": "empty object",
+      "value": {},
+      "canonical": "{}"
+    },
+    {
+      "name": "keys are sorted, not left in insertion order",
+      "value": { "b": 1, "a": 2 },
+      "canonical": "{\"a\":2,\"b\":1}"
+    },
+    {
+      "name": "sorting reaches every level, not only the top",
+      "value": { "outer": { "z": 1, "a": { "y": 2, "b": 3 } } },
+      "canonical": "{\"outer\":{\"a\":{\"b\":3,\"y\":2},\"z\":1}}"
+    },
+    {
+      "name": "no whitespace between tokens",
+      "value": { "a": [1, 2, 3], "b": { "c": true } },
+      "canonical": "{\"a\":[1,2,3],\"b\":{\"c\":true}}"
+    },
+    {
+      "name": "arrays keep their order, unlike object keys",
+      "value": { "a": ["z", "m", "a"] },
+      "canonical": "{\"a\":[\"z\",\"m\",\"a\"]}"
+    },
+    {
+      "name": "non-ASCII is not escaped",
+      "value": { "note": "café", "tick": "✓", "jp": "日本" },
+      "canonical": "{\"jp\":\"日本\",\"note\":\"café\",\"tick\":\"✓\"}"
+    },
+    {
+      "name": "control characters are still escaped, as JSON requires",
+      "value": { "a": "line\nbreak\ttab\"quote\\slash" },
+      "canonical": "{\"a\":\"line\\nbreak\\ttab\\\"quote\\\\slash\"}"
+    },
+    {
+      "name": "keys sort by code point, not by UTF-16 code unit",
+      "value": { "": 1, "😀": 2 },
+      "canonical": "{\"\":1,\"😀\":2}"
+    },
+    {
+      "name": "null and booleans",
+      "value": { "a": null, "b": true, "c": false },
+      "canonical": "{\"a\":null,\"b\":true,\"c\":false}"
+    },
+    {
+      "name": "integers, including negative and zero",
+      "value": { "a": 0, "b": -1, "c": 84532, "d": 46038588 },
+      "canonical": "{\"a\":0,\"b\":-1,\"c\":84532,\"d\":46038588}"
+    },
+    {
+      "name": "the largest integer that survives a double",
+      "value": { "n": 9007199254740991 },
+      "canonical": "{\"n\":9007199254740991}"
+    },
+    {
+      "name": "a realistic settlement receipt",
+      "value": {
+        "type": "https://agoreum.xyz/schemas/settlement-receipt-v1",
+        "issuer": "agoreum.xyz",
+        "issued_at": "2026-08-27T12:00:00+00:00",
+        "order": {
+          "id": "8b49e2b4-0000-0000-0000-000000000000",
+          "reference": "AGO-TMMR2TWH",
+          "status": "completed"
+        },
+        "settlement": {
+          "chain_id": 84532,
+          "network": "base-sepolia",
+          "is_testnet": true,
+          "amount": "1.025000",
+          "released_amount": "1.025000",
+          "fee_amount": "0.025625",
+          "transaction_hash": "0x340f7bfc",
+          "block_number": 45568344
+        }
+      },
+      "canonical": "{\"issued_at\":\"2026-08-27T12:00:00+00:00\",\"issuer\":\"agoreum.xyz\",\"order\":{\"id\":\"8b49e2b4-0000-0000-0000-000000000000\",\"reference\":\"AGO-TMMR2TWH\",\"status\":\"completed\"},\"settlement\":{\"amount\":\"1.025000\",\"block_number\":45568344,\"chain_id\":84532,\"fee_amount\":\"0.025625\",\"is_testnet\":true,\"network\":\"base-sepolia\",\"released_amount\":\"1.025000\",\"transaction_hash\":\"0x340f7bfc\"},\"type\":\"https://agoreum.xyz/schemas/settlement-receipt-v1\"}"
+    }
+  ],
+  "rejected": [
+    {
+      "name": "a whole-valued float, which only Python can still see",
+      "value": { "a": 1.0 },
+      "why": "float",
+      "detectable_by": ["python"]
+    },
+    {
+      "name": "a fractional float, visible to every implementation",
+      "value": { "a": 0.1 },
+      "why": "float",
+      "detectable_by": ["python", "typescript", "go"]
+    },
+    {
+      "name": "an integer past the safe range, which a double already rounded",
+      "value": { "a": 9007199254740993 },
+      "why": "safe integer range",
+      "detectable_by": ["python"]
+    },
+    {
+      "name": "a large negative integer past the safe range",
+      "value": { "a": -9007199254740993 },
+      "why": "safe integer range",
+      "detectable_by": ["python"]
+    }
+  ]
+}
