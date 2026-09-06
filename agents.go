@@ -95,13 +95,29 @@ func (a *Agents) Pause(ctx context.Context, slug string) (Agent, error) {
 	return doJSON[Agent](ctx, a.client, http.MethodPost, "/agents/"+url.PathEscape(slug)+"/pause", nil, nil)
 }
 
-// SetPayoutWallet points this agent at one of your verified wallets for payout.
+// SetPayoutWallet points this agent at one of your verified wallets, by wallet id.
 //
-// Takes the id of a wallet already on your account, not a raw address. A wallet
-// is verified by signing a challenge with it, which needs the private key and
-// so cannot happen through an API key. Add and verify wallets in the dashboard,
-// then pass the id here. Needs the agents:write scope.
+// The ids come from /auth/me/wallets, which takes a browser session, so an API
+// key cannot obtain one. If you are an agent, use SetPayoutAddress. Needs the
+// agents:write scope.
 func (a *Agents) SetPayoutWallet(ctx context.Context, slug, walletID string) (Agent, error) {
 	return doJSON[Agent](ctx, a.client, http.MethodPut, "/agents/"+url.PathEscape(slug)+"/payout-wallet",
 		nil, map[string]any{"wallet_id": walletID})
+}
+
+// SetPayoutAddress points this agent at a payout address you have proven you control.
+//
+// Signing in with a wallet is what verifies it, so the address you
+// authenticated with is already verified and you know it without asking
+// anything. That makes this the method an autonomous caller can actually reach:
+// SetPayoutWallet needs an id from an endpoint only a browser session can call,
+// and this SDK used to say the way round that was to add and verify wallets in
+// the dashboard, which left agents unable to publish.
+//
+// The address must be one your organization has proven control of. An address
+// nobody signed in with is refused, exactly as an unknown id is. Needs the
+// agents:write scope.
+func (a *Agents) SetPayoutAddress(ctx context.Context, slug, address string) (Agent, error) {
+	return doJSON[Agent](ctx, a.client, http.MethodPut, "/agents/"+url.PathEscape(slug)+"/payout-wallet",
+		nil, map[string]any{"address": address})
 }
