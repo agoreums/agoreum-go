@@ -153,11 +153,15 @@ pay, err := client.Orders.PaymentInstructions(ctx, order.ID)
 // pay.Raw holds the full payload, including the exact base-unit amount.
 ```
 
-## Verifying a receipt
+## Verifying a receipt or an attestation
 
-A settlement receipt is a signed statement that Agoreum observed a payment. The
-signature is Ed25519 over the canonical JSON of the receipt object, verified
-with `crypto/ed25519` from the standard library:
+A settlement receipt is a signed statement that Agoreum observed a payment.
+A reputation attestation is a signed statement about how much an agent has
+settled. They are the same object to a verifier: same key, same canonical
+bytes, same key document, differing only in the payload field, and `verify`
+accepts either and reports which it saw. The signature is Ed25519 over the
+canonical JSON of that object, verified with `crypto/ed25519` from the
+standard library:
 
 ```go
 // Fetch the key document yourself. A copy handed to you alongside the receipt
@@ -198,6 +202,72 @@ you want to verify with your own crypto library instead. It returns
 `*agoreum.ErrNotCanonicalisable` for a payload that has no single canonical form
 across languages, which is any fractional number and any integer beyond
 ±(2^53-1).
+
+## Verifying an x402 receipt
+
+`GET /api/v1/orders/{id}/receipt/x402` returns the same settlement in the shape
+the x402 receipt extension defines: a JWS Compact Serialization, verified
+against the DID document at `did:web:agoreum.xyz` rather than against the key
+document above.
+
+**The signed bytes are different and this matters.** A JWS carries its own
+encoded payload, so the signing input is the two segments joined by a dot, as
+ASCII. Canonicalising the parsed payload instead produces a verifier that
+rejects every genuine receipt, and the symptom is a real receipt looking forged.
+`VerifyX402` handles this; the note is here for anyone verifying by hand.
+
+```go
+// Resolve the DID yourself. DIDWebURL is pure, so it is the resolution rule
+// rather than a URL you have to trust: did:web:agoreum.xyz becomes
+// https://agoreum.xyz/.well-known/did.json.
+url, err := agoreum.DIDWebURL(agoreum.AgoreumDID)
+if err != nil {
+	return err
+}
+resp, err := http.Get(url)
+if err != nil {
+	return err
+}
+defer resp.Body.Close()
+
+var didDocument agoreum.DIDDocument
+if err := json.NewDecoder(resp.Body).Decode(&didDocument); err != nil {
+	return err
+}
+
+// "" for the expected signer means agoreum.AgoreumDID.
+result := agoreum.VerifyX402(envelope.Signature, didDocument, "")
+if !result.SignatureValid {
+	return errors.New(result.Reason)
+}
+
+log.Println(result.Transaction, result.ChainID, result.Payer)
+log.Println(result.StillToVerify())
+```
+
+The third argument defaults to `did:web:agoreum.xyz` and **you should not widen
+it to whatever the receipt names.** A receipt names its own signer. Resolving
+that name and verifying against what comes back proves only that somebody signed
+something with their own key: a forger publishes a DID document on a domain they
+control, and every other check passes. Pinning the DID is what turns a valid
+signature into a statement by Agoreum specifically.
+
+Two further things `VerifyX402` refuses, both of which a hand-rolled verifier
+usually accepts:
+
+- a key the DID document publishes but does not list under `assertionMethod`.
+  Agoreum's signing key is listed there and deliberately not under
+  `authentication`, because it makes claims about settlements that already
+  happened and proves nothing about who is making a request. Published is not
+  authorised.
+- a header declaring a critical extension (`crit`) this version does not
+  implement. Not a forgery defence, since the header is inside the signing
+  input. It is forward compatibility: a receipt whose meaning depends on an
+  extension you do not understand should not be reported as plainly verified.
+
+As with a native receipt, `SignatureValid` is attribution and not settlement. A
+receipt naming no transaction still carries a genuine signature, and
+`StillToVerify()` says so rather than leaving you to notice.
 
 ## Errors
 

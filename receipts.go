@@ -20,6 +20,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -183,10 +185,32 @@ type ReceiptVerification struct {
 	Reason          string
 	TransactionHash string
 	ChainID         int64
+	// DocumentType is "receipt" or "attestation". Reported because the two
+	// need different things done next: a receipt names one transaction, an
+	// attestation names an address whose whole history has to be counted.
+	DocumentType string
 }
 
 // StillToVerify names the half this function did not do.
+//
+// Specific to the document type. A generic sentence would be the same defect
+// the attestation itself shipped with: instructions that look followable and
+// send the reader somewhere useless. Naming only EscrowReleased is the
+// particular way to be wrong, because a dispute settled by the arbiter emits
+// EscrowSettled, which carries no provider address, and those orders are
+// counted in the attestation.
 func (r ReceiptVerification) StillToVerify() string {
+	if r.DocumentType == "attestation" {
+		return fmt.Sprintf(
+			"The signature only shows Agoreum made this claim. Count the "+
+				"settlements yourself on chain %d: filter EscrowCreated by its "+
+				"indexed provider topic equal to the agent's payout_address, then "+
+				"count the resulting escrow ids that later emitted EscrowReleased "+
+				"or EscrowSettled. Both matter, because a dispute settled by the "+
+				"arbiter emits EscrowSettled, which carries no provider address, "+
+				"and those orders are counted in the attestation.",
+			r.ChainID)
+	}
 	return fmt.Sprintf(
 		"The signature only shows Agoreum made this claim. Confirm transaction "+
 			"%s on chain %d before treating the settlement as real.",
@@ -207,10 +231,16 @@ type KeyDocument struct {
 }
 
 // ReceiptDocument is the envelope the API returns.
+//
+// A settlement receipt and a reputation attestation are the same object: same
+// key, same canonical form, same key document. Only the payload field differs,
+// so both are accepted rather than duplicating a check whose hard half,
+// CanonicalReceipt, took three separate ambiguities to get right.
 type ReceiptDocument struct {
-	Receipt   map[string]any `json:"receipt"`
-	Signature string         `json:"signature"`
-	KeyID     string         `json:"key_id"`
+	Receipt     map[string]any `json:"receipt,omitempty"`
+	Attestation map[string]any `json:"attestation,omitempty"`
+	Signature   string         `json:"signature"`
+	KeyID       string         `json:"key_id"`
 }
 
 // VerifyReceipt checks a receipt's signature against a fetched key document.
@@ -218,8 +248,17 @@ type ReceiptDocument struct {
 // Fetch the key document yourself rather than trusting a copy handed over with
 // the receipt, which would let a forger supply both halves.
 func VerifyReceipt(doc ReceiptDocument, keys KeyDocument) ReceiptVerification {
-	result := ReceiptVerification{KeyID: doc.KeyID}
-	if settlement, ok := doc.Receipt["settlement"].(map[string]any); ok {
+	result := ReceiptVerification{KeyID: doc.KeyID, DocumentType: "receipt"}
+	payload := doc.Receipt
+	if doc.Attestation != nil {
+		result.DocumentType = "attestation"
+		payload = doc.Attestation
+		if basis, ok := doc.Attestation["basis"].(map[string]any); ok {
+			if id, ok := basis["chain_id"].(float64); ok {
+				result.ChainID = int64(id)
+			}
+		}
+	} else if settlement, ok := doc.Receipt["settlement"].(map[string]any); ok {
 		if tx, ok := settlement["transaction_hash"].(string); ok {
 			result.TransactionHash = tx
 		}
@@ -228,12 +267,13 @@ func VerifyReceipt(doc ReceiptDocument, keys KeyDocument) ReceiptVerification {
 		}
 	}
 
-	if doc.Receipt == nil {
-		result.Reason = "the document has no receipt object"
+	if payload == nil {
+		result.Reason = "the document has no " + result.DocumentType + " object"
 		return result
 	}
 	if doc.Signature == "" {
-		result.Reason = "the receipt carries no signature, so it attributes to nobody"
+		result.Reason = "the " + result.DocumentType +
+			" carries no signature, so it attributes to nobody"
 		return result
 	}
 
@@ -251,11 +291,12 @@ func VerifyReceipt(doc ReceiptDocument, keys KeyDocument) ReceiptVerification {
 		return result
 	}
 
-	message, err := CanonicalReceipt(doc.Receipt)
+	message, err := CanonicalReceipt(payload)
 	if err != nil {
-		// A receipt Agoreum could not have produced. Its signer refuses these,
+		// A document Agoreum could not have produced. Its signer refuses these,
 		// so one arriving means a forgery attempt or a bug.
-		result.Reason = "the receipt is not canonicalisable: " + err.Error()
+		result.Reason = "the " + result.DocumentType +
+			" is not canonicalisable: " + err.Error()
 		return result
 	}
 
@@ -271,10 +312,297 @@ func VerifyReceipt(doc ReceiptDocument, keys KeyDocument) ReceiptVerification {
 	}
 
 	if !ed25519.Verify(ed25519.PublicKey(pub), message, sig) {
-		result.Reason = "the signature does not verify over the receipt's canonical form"
+		result.Reason = "the signature does not verify over the " +
+			result.DocumentType + "'s canonical form"
 		return result
 	}
 
 	result.SignatureValid = true
+	return result
+}
+
+// AgoreumDID is the DID Agoreum signs x402 receipts under.
+//
+// Pin it rather than reading it out of the receipt, for the reason set out on
+// VerifyX402.
+const AgoreumDID = "did:web:agoreum.xyz"
+
+// compactJWS matches a JWS Compact Serialization: three base64url segments.
+//
+// Matched strictly rather than split on ".", because base64url contains no dot
+// and a string that is nearly one should be refused by name rather than fail
+// later as a bad signature, which reads like forgery instead of bad input.
+var compactJWS = regexp.MustCompile(`^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$`)
+
+// PublicKeyJWK is the key material inside a DID verification method.
+type PublicKeyJWK struct {
+	Kty string `json:"kty"`
+	Crv string `json:"crv"`
+	X   string `json:"x"`
+}
+
+// VerificationMethod is one entry from a DID document's verificationMethod.
+type VerificationMethod struct {
+	ID           string       `json:"id"`
+	Type         string       `json:"type,omitempty"`
+	Controller   string       `json:"controller,omitempty"`
+	PublicKeyJWK PublicKeyJWK `json:"publicKeyJwk"`
+}
+
+// DIDDocument is the JSON served at a did:web identifier's resolution URL.
+//
+// AssertionMethod is []any because DID core allows either a reference string or
+// an embedded verification method, and a struct that accepts only the string
+// form would reject a conformant document.
+type DIDDocument struct {
+	ID                 string               `json:"id"`
+	VerificationMethod []VerificationMethod `json:"verificationMethod"`
+	AssertionMethod    []any                `json:"assertionMethod"`
+}
+
+// X402Verification reports what an x402 receipt's signature established, and
+// what it did not.
+//
+// Same split as ReceiptVerification and for the same reason: the signature
+// shows Agoreum made the claim, the chain shows the money moved, and collapsing
+// the two into one boolean is how a signature check gets mistaken for proof of
+// payment.
+type X402Verification struct {
+	SignatureValid bool
+	KeyID          string
+	Reason         string
+	Payload        map[string]any
+	Transaction    string
+	ChainID        int64
+	Payer          string
+	ResourceURL    string
+}
+
+// StillToVerify names the half this function did not do.
+func (r X402Verification) StillToVerify() string {
+	if !r.SignatureValid {
+		return "Nothing was established. The signature did not verify."
+	}
+	if r.Transaction == "" {
+		return "The signature shows Agoreum made this claim, but the receipt " +
+			"names no transaction, so there is nothing on chain to check it " +
+			"against. Treat it as unsettled."
+	}
+	return fmt.Sprintf(
+		"The signature only shows Agoreum made this claim. Confirm transaction "+
+			"%s on chain %d before treating the settlement as real.",
+		r.Transaction, r.ChainID)
+}
+
+// DIDWebURL returns the HTTPS URL a did:web identifier resolves to.
+//
+// Pure and offline, so the resolution rule is something an integrator reads
+// rather than guesses, and so it can be tested without a network:
+//
+//	did:web:agoreum.xyz       -> https://agoreum.xyz/.well-known/did.json
+//	did:web:example.com:a:b   -> https://example.com/a/b/did.json
+//	did:web:localhost%3A8080  -> https://localhost:8080/.well-known/did.json
+//
+// The last case is the one worth having a function for: a port lives in the DID
+// percent-encoded, and a reader who splits on ":" without decoding gets a host
+// of localhost and a path segment of 8080.
+func DIDWebURL(did string) (string, error) {
+	if !strings.HasPrefix(did, "did:web:") {
+		return "", fmt.Errorf("not a did:web identifier: %q", did)
+	}
+	parts := strings.Split(strings.TrimPrefix(did, "did:web:"), ":")
+	host, err := url.PathUnescape(parts[0])
+	if err != nil {
+		return "", fmt.Errorf("the did:web host is not valid percent-encoding: %q", did)
+	}
+	if host == "" {
+		return "", fmt.Errorf("the did:web identifier names no host: %q", did)
+	}
+	segments := make([]string, 0, len(parts)-1)
+	for _, part := range parts[1:] {
+		decoded, err := url.PathUnescape(part)
+		if err != nil {
+			return "", fmt.Errorf("a did:web path segment is not valid percent-encoding: %q", did)
+		}
+		segments = append(segments, decoded)
+	}
+	if len(segments) == 0 {
+		return "https://" + host + "/.well-known/did.json", nil
+	}
+	return "https://" + host + "/" + strings.Join(segments, "/") + "/did.json", nil
+}
+
+func decodeJWSSegment(segment string) (map[string]any, error) {
+	raw, err := base64.RawURLEncoding.DecodeString(strings.TrimRight(segment, "="))
+	if err != nil {
+		return nil, err
+	}
+	var out map[string]any
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, err
+	}
+	if out == nil {
+		return nil, fmt.Errorf("the segment is not a JSON object")
+	}
+	return out, nil
+}
+
+// VerifyX402 checks an x402 receipt against a resolved DID document.
+//
+// compact is the signature field of GET /orders/{id}/receipt/x402, a JWS
+// Compact Serialization. doc is the JSON that DIDWebURL(expectDID) serves.
+// Resolve it yourself: a document handed over with the receipt lets a forger
+// supply both halves. Pass "" for expectDID to mean AgoreumDID.
+//
+// expectDID is what makes the rest mean anything, and it is the check an
+// implementation is most likely to leave out. A receipt names its own signer in
+// kid. Verifying it against whatever document that DID resolves to proves only
+// that somebody signed something with their own key, which any forger can do by
+// publishing a DID document on a domain they control: the key signs, the
+// document publishes it, assertionMethod authorises it, and every other check
+// here passes. Pinning the DID is what turns a valid signature into a statement
+// by Agoreum specifically.
+//
+// Two lines implement it, and they are not equally load-bearing. Requiring
+// doc.ID to equal expectDID is the one that closes the hole, because it refuses
+// a document that was never Agoreum's whatever the receipt claims. Comparing
+// kid's own DID is redundant for safety and kept for the message: without it a
+// receipt from somebody else is refused for having the wrong document rather
+// than for having the wrong signer, and the reader is sent looking in the wrong
+// place. Said plainly here because a comment that credits the wrong line for a
+// security property is how the line that matters gets removed later as
+// duplication.
+//
+// The key must be listed under assertionMethod. Agoreum publishes it there and
+// deliberately not under authentication: it makes claims about settlements that
+// already happened, holds no funds, and proves nothing about who is making a
+// request. A verifier that accepts any key in the document discards that
+// distinction, so this one does not.
+func VerifyX402(compact string, doc DIDDocument, expectDID string) X402Verification {
+	if expectDID == "" {
+		expectDID = AgoreumDID
+	}
+	var result X402Verification
+
+	failed := func(reason string) X402Verification {
+		result.SignatureValid = false
+		result.Reason = reason
+		return result
+	}
+
+	if !compactJWS.MatchString(compact) {
+		return failed("this is not a JWS Compact Serialization: three base64url " +
+			"segments separated by dots were expected")
+	}
+	segments := strings.Split(compact, ".")
+	headerSegment, payloadSegment, signatureSegment := segments[0], segments[1], segments[2]
+
+	header, err := decodeJWSSegment(headerSegment)
+	if err != nil {
+		return failed("a segment does not decode to JSON: " + err.Error())
+	}
+	payload, err := decodeJWSSegment(payloadSegment)
+	if err != nil {
+		return failed("a segment does not decode to JSON: " + err.Error())
+	}
+
+	keyID, _ := header["kid"].(string)
+	result.KeyID = keyID
+
+	// RFC 7515: crit names extensions the verifier must understand. This one
+	// understands none, so the only correct response is refusal. Accepting an
+	// unknown critical header is how a signature stays valid while meaning
+	// something other than what was read.
+	if _, ok := header["crit"]; ok {
+		return failed("the header declares critical extensions this verifier " +
+			"does not implement, so the receipt cannot be safely interpreted")
+	}
+	if alg, _ := header["alg"].(string); alg != "EdDSA" {
+		return failed(fmt.Sprintf("the header names algorithm %q; Agoreum signs "+
+			"with EdDSA and nothing else is accepted here", header["alg"]))
+	}
+	if keyID == "" || !strings.Contains(keyID, "#") {
+		return failed("the header carries no kid naming a verification method, " +
+			"so the signature cannot be attributed to a key")
+	}
+
+	did := strings.SplitN(keyID, "#", 2)[0]
+	if did != expectDID {
+		return failed(fmt.Sprintf("the receipt is signed by %q, not %q. A valid "+
+			"signature by somebody else is not a statement by Agoreum", did, expectDID))
+	}
+	if doc.ID != expectDID {
+		return failed(fmt.Sprintf("the DID document identifies itself as %q, not "+
+			"%q, so it is not the right document to check this receipt against",
+			doc.ID, expectDID))
+	}
+
+	// Existence before authority, so the two failures read differently: a key
+	// nobody publishes is a rotation or a forgery, a key published but not
+	// authorised is a different problem entirely, and one message for both
+	// sends the reader looking in the wrong place.
+	var method *VerificationMethod
+	for i := range doc.VerificationMethod {
+		if doc.VerificationMethod[i].ID == keyID {
+			method = &doc.VerificationMethod[i]
+			break
+		}
+	}
+	if method == nil {
+		return failed(fmt.Sprintf(
+			"the DID document publishes no verification method with id %s", keyID))
+	}
+
+	asserting := false
+	for _, entry := range doc.AssertionMethod {
+		switch value := entry.(type) {
+		case string:
+			asserting = asserting || value == keyID
+		case map[string]any:
+			id, _ := value["id"].(string)
+			asserting = asserting || id == keyID
+		}
+	}
+	if !asserting {
+		return failed(fmt.Sprintf("%s is not listed under assertionMethod, so "+
+			"this key is not authorised to make claims even if the document "+
+			"publishes it", keyID))
+	}
+	jwk := method.PublicKeyJWK
+	if jwk.Kty != "OKP" || jwk.Crv != "Ed25519" || jwk.X == "" {
+		return failed("the verification method does not carry an Ed25519 public " +
+			"key in publicKeyJwk")
+	}
+
+	pub, err := base64.RawURLEncoding.DecodeString(strings.TrimRight(jwk.X, "="))
+	if err != nil || len(pub) != ed25519.PublicKeySize {
+		return failed("the published key is not a usable Ed25519 public key")
+	}
+	sig, err := base64.RawURLEncoding.DecodeString(strings.TrimRight(signatureSegment, "="))
+	if err != nil {
+		return failed("the signature is not valid base64url")
+	}
+
+	// The JWS signing input, per RFC 7515: the two encoded segments joined by a
+	// dot, as ASCII. Not the canonical JSON. Re-encoding the parsed payload
+	// would reject any receipt whose producer serialised it even slightly
+	// differently, which is the whole reason JWS carries its own payload.
+	signingInput := []byte(headerSegment + "." + payloadSegment)
+	if !ed25519.Verify(ed25519.PublicKey(pub), signingInput, sig) {
+		return failed("the signature does not verify over the signing input")
+	}
+
+	result.SignatureValid = true
+	result.Payload = payload
+	result.Transaction, _ = payload["transaction"].(string)
+	result.Payer, _ = payload["payer"].(string)
+	result.ResourceURL, _ = payload["resourceUrl"].(string)
+	if network, ok := payload["network"].(string); ok {
+		if rest, found := strings.CutPrefix(network, "eip155:"); found {
+			if id, err := strconv.ParseInt(rest, 10, 64); err == nil {
+				result.ChainID = id
+			}
+		}
+	}
 	return result
 }

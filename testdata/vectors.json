@@ -1,6 +1,12 @@
 {
   "_comment": [
-    "Canonical-form conformance vectors for Agoreum settlement receipts.",
+    "Canonical-form conformance vectors for Agoreum signed documents.",
+    "",
+    "Settlement receipts and reputation attestations both, because they are",
+    "the same object: one key, one canonical form, one key document,",
+    "differing only in which field carries the payload. A realistic vector",
+    "for each is what stops that claim being true only in the code that",
+    "asserts it.",
     "",
     "Every implementation of the published verification rule must turn each",
     "`value` below into exactly the `canonical` string. There are four:",
@@ -131,6 +137,47 @@
         }
       },
       "canonical": "{\"issued_at\":\"2026-08-27T12:00:00+00:00\",\"issuer\":\"agoreum.xyz\",\"order\":{\"id\":\"8b49e2b4-0000-0000-0000-000000000000\",\"reference\":\"AGO-TMMR2TWH\",\"status\":\"completed\"},\"settlement\":{\"amount\":\"1.025000\",\"block_number\":45568344,\"chain_id\":84532,\"fee_amount\":\"0.025625\",\"is_testnet\":true,\"network\":\"base-sepolia\",\"released_amount\":\"1.025000\",\"transaction_hash\":\"0x340f7bfc\"},\"type\":\"https://agoreum.xyz/schemas/settlement-receipt-v1\"}"
+    },
+    {
+      "name": "a realistic reputation attestation",
+      "value": {
+        "type": "https://agoreum.xyz/schemas/reputation-attestation-v1",
+        "issuer": "agoreum.xyz",
+        "issued_at": "2026-08-27T12:00:00+00:00",
+        "agent": {
+          "id": "3d61e644-0000-0000-0000-000000000000",
+          "slug": "a-provider",
+          "payout_address": "0x8ecb5b83e57cfd19aa2b6673173da3984a8ad68d"
+        },
+        "basis": {
+          "chain_id": 84532,
+          "network": "base-sepolia",
+          "is_testnet": true,
+          "escrow_contract": "0x13c90ba1441bd02d55801cb2f8bda3515020a16d",
+          "algorithm_version": "v1",
+          "minimum_orders_for_score": 3
+        },
+        "settled": {
+          "completed_orders": 4,
+          "total_volume": "41.000000",
+          "volume_currency": "USDC",
+          "distinct_buyers": 3,
+          "repeat_buyers": 1,
+          "returning_orders": 1,
+          "largest_buyer_orders": 2
+        },
+        "against": {
+          "cancelled_orders": 1,
+          "disputed_orders": 0,
+          "disputes_lost": 0
+        },
+        "score": "72.50",
+        "verify": {
+          "authority": "chain",
+          "instructions": "Verify the signature against the published key, then count the settlements yourself: filter EscrowCreated by the agent's payout_address and count the ids that later emitted EscrowReleased or EscrowSettled."
+        }
+      },
+      "canonical": "{\"against\":{\"cancelled_orders\":1,\"disputed_orders\":0,\"disputes_lost\":0},\"agent\":{\"id\":\"3d61e644-0000-0000-0000-000000000000\",\"payout_address\":\"0x8ecb5b83e57cfd19aa2b6673173da3984a8ad68d\",\"slug\":\"a-provider\"},\"basis\":{\"algorithm_version\":\"v1\",\"chain_id\":84532,\"escrow_contract\":\"0x13c90ba1441bd02d55801cb2f8bda3515020a16d\",\"is_testnet\":true,\"minimum_orders_for_score\":3,\"network\":\"base-sepolia\"},\"issued_at\":\"2026-08-27T12:00:00+00:00\",\"issuer\":\"agoreum.xyz\",\"score\":\"72.50\",\"settled\":{\"completed_orders\":4,\"distinct_buyers\":3,\"largest_buyer_orders\":2,\"repeat_buyers\":1,\"returning_orders\":1,\"total_volume\":\"41.000000\",\"volume_currency\":\"USDC\"},\"type\":\"https://agoreum.xyz/schemas/reputation-attestation-v1\",\"verify\":{\"authority\":\"chain\",\"instructions\":\"Verify the signature against the published key, then count the settlements yourself: filter EscrowCreated by the agent's payout_address and count the ids that later emitted EscrowReleased or EscrowSettled.\"}}"
     }
   ],
   "rejected": [
@@ -158,5 +205,387 @@
       "why": "safe integer range",
       "detectable_by": ["python"]
     }
-  ]
+  ],
+  "x402": {
+    "_comment": [
+      "x402 receipt conformance. An x402 receipt is a JWS Compact",
+      "Serialization signed by Agoreum and verified against the DID document",
+      "at did:web:agoreum.xyz, which is a different check from the native",
+      "receipt above: JWS carries its own encoded payload, so the signing",
+      "input is the two segments joined by a dot as ASCII, and canonical JSON",
+      "does not enter into it.",
+      "",
+      "That difference is the reason these vectors exist. An implementer who",
+      "reuses the canonical form here writes a verifier that rejects every",
+      "genuine receipt whose producer serialised the payload even slightly",
+      "differently, and the visible symptom is a real receipt looking forged.",
+      "",
+      "**Each fixture is stored as `segments`, to be joined with a dot.** Not",
+      "a style choice and not to be tidied back into one string. Whole JWSs",
+      "here made gitleaks' `jwt` rule fire twenty-six times, once per fixture",
+      "per copy of this file, every one a false positive. The alternatives",
+      "were a path allowlist, which would switch the scanner off across a",
+      "file that also carries private key seeds, or thirteen exact-value",
+      "exceptions that would go stale the next time these are regenerated.",
+      "Storing segments needs no exception at all, so the secret scan keeps",
+      "its complete ruleset over this file. One segment joins to itself and",
+      "two join to an unsigned JWS, which is how the two malformed cases are",
+      "expressed without special handling.",
+      "",
+      "The keys below are derived from the seed bytes 0..31 and 32..63 and are",
+      "published on purpose. Every signature in this file can be regenerated",
+      "from them, which is what makes these fixtures checkable rather than",
+      "opaque. Neither is, or may ever be, a key that signs anything real.",
+      "",
+      "Every rejected case names an `expect_reason` its refusal must contain.",
+      "That is not decoration. The first version of this block asserted only",
+      "that a case was refused, and three of its cases were refused by the",
+      "signature check rather than by the check they were named after: the",
+      "header is inside the signing input, so editing `alg` or adding `crit`",
+      "and keeping the original signature breaks the signature. Deleting the",
+      "algorithm and extension checks outright left every suite green. The",
+      "header variants are genuinely signed now, and a refusal that names the",
+      "wrong reason fails.",
+      "",
+      "The last five cases carry real signatures and are about authority",
+      "rather than cryptography. They are the ones a verifier passes by",
+      "accident."
+    ],
+    "signing_key_seed_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "forger_key_seed_hex": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+    "did": "did:web:vectors.example",
+    "did_document": {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:vectors.example",
+      "verificationMethod": [
+        {
+          "id": "did:web:vectors.example#A6EHv_POEL4dcN0Y",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:vectors.example",
+          "publicKeyJwk": {
+            "kty": "OKP",
+            "crv": "Ed25519",
+            "x": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg",
+            "alg": "EdDSA",
+            "use": "sig"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:vectors.example#A6EHv_POEL4dcN0Y"
+      ]
+    },
+    "forger_did": "did:web:forger.example",
+    "forger_did_document": {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+      ],
+      "id": "did:web:forger.example",
+      "verificationMethod": [
+        {
+          "id": "did:web:forger.example#Kay64UG8yvCyLhqU",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:forger.example",
+          "publicKeyJwk": {
+            "kty": "OKP",
+            "crv": "Ed25519",
+            "x": "Kay64UG8yvCyLhqU000LxzYeUm0L_hLIl5S8kyKWbdc",
+            "alg": "EdDSA",
+            "use": "sig"
+          }
+        }
+      ],
+      "assertionMethod": [
+        "did:web:forger.example#Kay64UG8yvCyLhqU"
+      ]
+    },
+    "did_web_urls": [
+      {
+        "did": "did:web:agoreum.xyz",
+        "url": "https://agoreum.xyz/.well-known/did.json",
+        "why": "the plain case, and the one Agoreum actually publishes"
+      },
+      {
+        "did": "did:web:example.com:a:b",
+        "url": "https://example.com/a/b/did.json",
+        "why": "colons after the host are path segments, and there is no .well-known"
+      },
+      {
+        "did": "did:web:localhost%3A8080",
+        "url": "https://localhost:8080/.well-known/did.json",
+        "why": "a port is percent-encoded, so splitting on ':' without decoding gives the wrong host"
+      }
+    ],
+    "accepted": [
+      {
+        "name": "a settled receipt",
+        "segments": [
+          "eyJhbGciOiJFZERTQSIsImtpZCI6ImRpZDp3ZWI6dmVjdG9ycy5leGFtcGxlI0E2RUh2X1BPRUw0ZGNOMFkiLCJ0eXAiOiJKT1NFIn0",
+          "eyJpc3N1ZWRBdCI6MTc1NzAzMDQwMCwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsInBheWVyIjoiMHhmNjg4YTI1ZGIwMjhkZTNmZmM2NzBjMGM1YTc5ZWUxYTVlOWJkOTBhIiwicmVzb3VyY2VVcmwiOiJodHRwczovL2Fnb3JldW0ueHl6L2VuL2FnZW50cy9leGFtcGxlLWFnZW50L3NlcnZpY2VzL2V4YW1wbGUtc2VydmljZSIsInRyYW5zYWN0aW9uIjoiMHg2NTQzODg0M2QyZTY5YTg1OWU5ZTA5OWVlYjkzNTcxYWU5ODNiZWU3OGQ2MTkwNTZlODI4M2E3YjBhMmE3YzJhIiwidmVyc2lvbiI6MX0",
+          "OnT8nwymqPKS9CKsFijpwgRGM7MsMUonkXu9nN7Zra4m9JjICOZOrqyUB3M2zrU9nVKrKNcOGqyR78uLUhMxDg"
+        ],
+        "payload": {
+          "version": 1,
+          "network": "eip155:84532",
+          "resourceUrl": "https://agoreum.xyz/en/agents/example-agent/services/example-service",
+          "payer": "0xf688a25db028de3ffc670c0c5a79ee1a5e9bd90a",
+          "transaction": "0x65438843d2e69a859e9e099eeb93571ae983bee78d619056e8283a7b0a2a7c2a",
+          "issuedAt": 1757030400
+        },
+        "chain_id": 84532,
+        "transaction": "0x65438843d2e69a859e9e099eeb93571ae983bee78d619056e8283a7b0a2a7c2a",
+        "payer": "0xf688a25db028de3ffc670c0c5a79ee1a5e9bd90a",
+        "resource_url": "https://agoreum.xyz/en/agents/example-agent/services/example-service"
+      },
+      {
+        "name": "a genuine receipt naming no transaction",
+        "segments": [
+          "eyJhbGciOiJFZERTQSIsImtpZCI6ImRpZDp3ZWI6dmVjdG9ycy5leGFtcGxlI0E2RUh2X1BPRUw0ZGNOMFkiLCJ0eXAiOiJKT1NFIn0",
+          "eyJpc3N1ZWRBdCI6MTc1NzAzMDQwMCwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsInBheWVyIjoiMHhmNjg4YTI1ZGIwMjhkZTNmZmM2NzBjMGM1YTc5ZWUxYTVlOWJkOTBhIiwicmVzb3VyY2VVcmwiOiJodHRwczovL2Fnb3JldW0ueHl6L2VuL21hcmtldHBsYWNlIiwidmVyc2lvbiI6MX0",
+          "33bk8UP86wIuJflsPQjl8CQhl80nPvfEPWWkdaNkyL3pIao0MRnG9AQNSyrxfglttJXYdvX4vZkm2x0TTHpxDg"
+        ],
+        "payload": {
+          "version": 1,
+          "network": "eip155:84532",
+          "resourceUrl": "https://agoreum.xyz/en/marketplace",
+          "payer": "0xf688a25db028de3ffc670c0c5a79ee1a5e9bd90a",
+          "issuedAt": 1757030400
+        },
+        "chain_id": 84532,
+        "transaction": null,
+        "payer": "0xf688a25db028de3ffc670c0c5a79ee1a5e9bd90a",
+        "resource_url": "https://agoreum.xyz/en/marketplace",
+        "why": "the signature is valid and it still proves no settlement. The result must distinguish the two rather than report a valid signature and stop"
+      }
+    ],
+    "rejected": [
+      {
+        "name": "the payload is edited to redirect the payer",
+        "segments": [
+          "eyJhbGciOiJFZERTQSIsImtpZCI6ImRpZDp3ZWI6dmVjdG9ycy5leGFtcGxlI0E2RUh2X1BPRUw0ZGNOMFkiLCJ0eXAiOiJKT1NFIn0",
+          "eyJpc3N1ZWRBdCI6MTc1NzAzMDQwMCwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsInBheWVyIjoiMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDBkRWFEIiwicmVzb3VyY2VVcmwiOiJodHRwczovL2Fnb3JldW0ueHl6L2VuL2FnZW50cy9leGFtcGxlLWFnZW50L3NlcnZpY2VzL2V4YW1wbGUtc2VydmljZSIsInRyYW5zYWN0aW9uIjoiMHg2NTQzODg0M2QyZTY5YTg1OWU5ZTA5OWVlYjkzNTcxYWU5ODNiZWU3OGQ2MTkwNTZlODI4M2E3YjBhMmE3YzJhIiwidmVyc2lvbiI6MX0",
+          "OnT8nwymqPKS9CKsFijpwgRGM7MsMUonkXu9nN7Zra4m9JjICOZOrqyUB3M2zrU9nVKrKNcOGqyR78uLUhMxDg"
+        ],
+        "expect_reason": "does not verify",
+        "why": "the only case here that is genuinely about the signature: the bytes changed under a signature that still claims to cover them"
+      },
+      {
+        "name": "alg is downgraded to none",
+        "segments": [
+          "eyJhbGciOiJub25lIiwia2lkIjoiZGlkOndlYjp2ZWN0b3JzLmV4YW1wbGUjQTZFSHZfUE9FTDRkY04wWSIsInR5cCI6IkpPU0UifQ",
+          "eyJpc3N1ZWRBdCI6MTc1NzAzMDQwMCwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsInBheWVyIjoiMHhmNjg4YTI1ZGIwMjhkZTNmZmM2NzBjMGM1YTc5ZWUxYTVlOWJkOTBhIiwicmVzb3VyY2VVcmwiOiJodHRwczovL2Fnb3JldW0ueHl6L2VuL2FnZW50cy9leGFtcGxlLWFnZW50L3NlcnZpY2VzL2V4YW1wbGUtc2VydmljZSIsInRyYW5zYWN0aW9uIjoiMHg2NTQzODg0M2QyZTY5YTg1OWU5ZTA5OWVlYjkzNTcxYWU5ODNiZWU3OGQ2MTkwNTZlODI4M2E3YjBhMmE3YzJhIiwidmVyc2lvbiI6MX0",
+          "vi-yNJmfu0Azs5niKuZAmG3vPCUqNggmlByfiU4iRWLO9wJCwMhm2NL0Gf7CB2mvGobUDtMz2rYlaWy6r8u7Dw"
+        ],
+        "expect_reason": "EdDSA",
+        "why": "signed for real, so the signature check passes it and only the header check refuses it. Built with the original signature in the first version, which meant this vector tested the signature check and nothing else"
+      },
+      {
+        "name": "alg claims a symmetric algorithm",
+        "segments": [
+          "eyJhbGciOiJIUzI1NiIsImtpZCI6ImRpZDp3ZWI6dmVjdG9ycy5leGFtcGxlI0E2RUh2X1BPRUw0ZGNOMFkiLCJ0eXAiOiJKT1NFIn0",
+          "eyJpc3N1ZWRBdCI6MTc1NzAzMDQwMCwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsInBheWVyIjoiMHhmNjg4YTI1ZGIwMjhkZTNmZmM2NzBjMGM1YTc5ZWUxYTVlOWJkOTBhIiwicmVzb3VyY2VVcmwiOiJodHRwczovL2Fnb3JldW0ueHl6L2VuL2FnZW50cy9leGFtcGxlLWFnZW50L3NlcnZpY2VzL2V4YW1wbGUtc2VydmljZSIsInRyYW5zYWN0aW9uIjoiMHg2NTQzODg0M2QyZTY5YTg1OWU5ZTA5OWVlYjkzNTcxYWU5ODNiZWU3OGQ2MTkwNTZlODI4M2E3YjBhMmE3YzJhIiwidmVyc2lvbiI6MX0",
+          "_qqQGABtm9eORxwoRxL172NJXYz7EM3-uAogstIFS1edkaMqzJiZlDRRdaslhoFRWTBoFIZTodcZz8LZ3BDmCA"
+        ],
+        "expect_reason": "EdDSA",
+        "why": "a verifier that dispatched on alg would hand an Ed25519 public key to an HMAC as a shared secret. This one never dispatches, and still refuses rather than ignoring the field"
+      },
+      {
+        "name": "an unknown critical header extension",
+        "segments": [
+          "eyJhbGciOiJFZERTQSIsImNyaXQiOlsiZXhwIl0sImV4cCI6MTc1NzAzMDQwMCwia2lkIjoiZGlkOndlYjp2ZWN0b3JzLmV4YW1wbGUjQTZFSHZfUE9FTDRkY04wWSIsInR5cCI6IkpPU0UifQ",
+          "eyJpc3N1ZWRBdCI6MTc1NzAzMDQwMCwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsInBheWVyIjoiMHhmNjg4YTI1ZGIwMjhkZTNmZmM2NzBjMGM1YTc5ZWUxYTVlOWJkOTBhIiwicmVzb3VyY2VVcmwiOiJodHRwczovL2Fnb3JldW0ueHl6L2VuL2FnZW50cy9leGFtcGxlLWFnZW50L3NlcnZpY2VzL2V4YW1wbGUtc2VydmljZSIsInRyYW5zYWN0aW9uIjoiMHg2NTQzODg0M2QyZTY5YTg1OWU5ZTA5OWVlYjkzNTcxYWU5ODNiZWU3OGQ2MTkwNTZlODI4M2E3YjBhMmE3YzJhIiwidmVyc2lvbiI6MX0",
+          "fxlWV0YItoXTCcchm1PhiMc37RMLs5-pVW-K0v4VSKZV4CfUJRuQJ_PRM0-rqF81FCd4SzWe1lZ2uNhEJhLCCg"
+        ],
+        "expect_reason": "critical",
+        "why": "RFC 7515 requires refusal when crit names an extension the verifier does not implement. Genuinely issued and genuinely unreadable: accepting it means reporting a receipt as verified while dropping the condition attached to it"
+      },
+      {
+        "name": "the kid names a key the document does not publish",
+        "segments": [
+          "eyJhbGciOiJFZERTQSIsImtpZCI6ImRpZDp3ZWI6dmVjdG9ycy5leGFtcGxlI25vdHRoZWtleXdla25vdyIsInR5cCI6IkpPU0UifQ",
+          "eyJpc3N1ZWRBdCI6MTc1NzAzMDQwMCwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsInBheWVyIjoiMHhmNjg4YTI1ZGIwMjhkZTNmZmM2NzBjMGM1YTc5ZWUxYTVlOWJkOTBhIiwicmVzb3VyY2VVcmwiOiJodHRwczovL2Fnb3JldW0ueHl6L2VuL2FnZW50cy9leGFtcGxlLWFnZW50L3NlcnZpY2VzL2V4YW1wbGUtc2VydmljZSIsInRyYW5zYWN0aW9uIjoiMHg2NTQzODg0M2QyZTY5YTg1OWU5ZTA5OWVlYjkzNTcxYWU5ODNiZWU3OGQ2MTkwNTZlODI4M2E3YjBhMmE3YzJhIiwidmVyc2lvbiI6MX0",
+          "a6yUGe4UfSmC7GxbI5xLnUXniLuiAuExCaVAlGz6Q9fnfAf1T7F0CtwiGLaeRcKFkHLfKNXPjLvY31Ik9XB3DA"
+        ],
+        "expect_reason": "verification method",
+        "why": "signed by the right party under a key id nothing resolves, which is what a rotation away from a compromised key looks like"
+      },
+      {
+        "name": "no kid at all",
+        "segments": [
+          "eyJhbGciOiJFZERTQSIsInR5cCI6IkpPU0UifQ",
+          "eyJpc3N1ZWRBdCI6MTc1NzAzMDQwMCwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsInBheWVyIjoiMHhmNjg4YTI1ZGIwMjhkZTNmZmM2NzBjMGM1YTc5ZWUxYTVlOWJkOTBhIiwicmVzb3VyY2VVcmwiOiJodHRwczovL2Fnb3JldW0ueHl6L2VuL2FnZW50cy9leGFtcGxlLWFnZW50L3NlcnZpY2VzL2V4YW1wbGUtc2VydmljZSIsInRyYW5zYWN0aW9uIjoiMHg2NTQzODg0M2QyZTY5YTg1OWU5ZTA5OWVlYjkzNTcxYWU5ODNiZWU3OGQ2MTkwNTZlODI4M2E3YjBhMmE3YzJhIiwidmVyc2lvbiI6MX0",
+          "_4JooAtSjTMfY9GGlosY_Z9GogY_dWnzlukrnhMMPPvSv-wnfB6PFDO2AAFgnbAz0JuZ2_956ETQqms6KaImAw"
+        ],
+        "expect_reason": "kid",
+        "why": "a signature attributable to nobody, even though it is a real one"
+      },
+      {
+        "name": "not a compact JWS",
+        "segments": [
+          "hello world"
+        ],
+        "expect_reason": "Compact Serialization",
+        "why": "refused by shape, so malformed input does not read as forgery. One segment joins to itself"
+      },
+      {
+        "name": "two segments rather than three",
+        "segments": [
+          "eyJhbGciOiJFZERTQSIsImtpZCI6ImRpZDp3ZWI6dmVjdG9ycy5leGFtcGxlI0E2RUh2X1BPRUw0ZGNOMFkiLCJ0eXAiOiJKT1NFIn0",
+          "eyJpc3N1ZWRBdCI6MTc1NzAzMDQwMCwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsInBheWVyIjoiMHhmNjg4YTI1ZGIwMjhkZTNmZmM2NzBjMGM1YTc5ZWUxYTVlOWJkOTBhIiwicmVzb3VyY2VVcmwiOiJodHRwczovL2Fnb3JldW0ueHl6L2VuL2FnZW50cy9leGFtcGxlLWFnZW50L3NlcnZpY2VzL2V4YW1wbGUtc2VydmljZSIsInRyYW5zYWN0aW9uIjoiMHg2NTQzODg0M2QyZTY5YTg1OWU5ZTA5OWVlYjkzNTcxYWU5ODNiZWU3OGQ2MTkwNTZlODI4M2E3YjBhMmE3YzJhIiwidmVyc2lvbiI6MX0"
+        ],
+        "expect_reason": "Compact Serialization",
+        "why": "an unsigned JWS is not a receipt"
+      },
+      {
+        "name": "the signature is valid but the caller expected another signer",
+        "segments": [
+          "eyJhbGciOiJFZERTQSIsImtpZCI6ImRpZDp3ZWI6dmVjdG9ycy5leGFtcGxlI0E2RUh2X1BPRUw0ZGNOMFkiLCJ0eXAiOiJKT1NFIn0",
+          "eyJpc3N1ZWRBdCI6MTc1NzAzMDQwMCwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsInBheWVyIjoiMHhmNjg4YTI1ZGIwMjhkZTNmZmM2NzBjMGM1YTc5ZWUxYTVlOWJkOTBhIiwicmVzb3VyY2VVcmwiOiJodHRwczovL2Fnb3JldW0ueHl6L2VuL2FnZW50cy9leGFtcGxlLWFnZW50L3NlcnZpY2VzL2V4YW1wbGUtc2VydmljZSIsInRyYW5zYWN0aW9uIjoiMHg2NTQzODg0M2QyZTY5YTg1OWU5ZTA5OWVlYjkzNTcxYWU5ODNiZWU3OGQ2MTkwNTZlODI4M2E3YjBhMmE3YzJhIiwidmVyc2lvbiI6MX0",
+          "OnT8nwymqPKS9CKsFijpwgRGM7MsMUonkXu9nN7Zra4m9JjICOZOrqyUB3M2zrU9nVKrKNcOGqyR78uLUhMxDg"
+        ],
+        "expect_did": "did:web:someone-else.example",
+        "expect_reason": "signed by",
+        "why": "the refusal must name who actually signed. Without that the caller is told the document is wrong rather than that it came from somebody else"
+      },
+      {
+        "name": "a complete forgery, signed by another DID and checked against that DID's own document",
+        "segments": [
+          "eyJhbGciOiJFZERTQSIsImtpZCI6ImRpZDp3ZWI6Zm9yZ2VyLmV4YW1wbGUjS2F5NjRVRzh5dkN5TGhxVSIsInR5cCI6IkpPU0UifQ",
+          "eyJpc3N1ZWRBdCI6MTc1NzAzMDQwMCwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsInBheWVyIjoiMHhmNjg4YTI1ZGIwMjhkZTNmZmM2NzBjMGM1YTc5ZWUxYTVlOWJkOTBhIiwicmVzb3VyY2VVcmwiOiJodHRwczovL2Fnb3JldW0ueHl6L2VuL2FnZW50cy9leGFtcGxlLWFnZW50L3NlcnZpY2VzL2V4YW1wbGUtc2VydmljZSIsInRyYW5zYWN0aW9uIjoiMHg2NTQzODg0M2QyZTY5YTg1OWU5ZTA5OWVlYjkzNTcxYWU5ODNiZWU3OGQ2MTkwNTZlODI4M2E3YjBhMmE3YzJhIiwidmVyc2lvbiI6MX0",
+          "RqaaaLsMkao4Ehs8GVEb3zJhjiDmR4sA9OgebXqWYzckzy4wfkFJAe2w9lYyCddmr-SdpIOk3uaKjjGh277aBQ"
+        ],
+        "did_document": {
+          "@context": [
+            "https://www.w3.org/ns/did/v1",
+            "https://w3id.org/security/suites/jws-2020/v1"
+          ],
+          "id": "did:web:forger.example",
+          "verificationMethod": [
+            {
+              "id": "did:web:forger.example#Kay64UG8yvCyLhqU",
+              "type": "JsonWebKey2020",
+              "controller": "did:web:forger.example",
+              "publicKeyJwk": {
+                "kty": "OKP",
+                "crv": "Ed25519",
+                "x": "Kay64UG8yvCyLhqU000LxzYeUm0L_hLIl5S8kyKWbdc",
+                "alg": "EdDSA",
+                "use": "sig"
+              }
+            }
+          ],
+          "assertionMethod": [
+            "did:web:forger.example#Kay64UG8yvCyLhqU"
+          ]
+        },
+        "expect_reason": "signed by",
+        "why": "the attack the pin exists for, and the only vector that is internally consistent end to end. Everything agrees: the key signs, the document publishes it, assertionMethod authorises it. Nothing but the pinned DID separates it from a genuine receipt"
+      },
+      {
+        "name": "the DID document describes a different subject",
+        "segments": [
+          "eyJhbGciOiJFZERTQSIsImtpZCI6ImRpZDp3ZWI6dmVjdG9ycy5leGFtcGxlI0E2RUh2X1BPRUw0ZGNOMFkiLCJ0eXAiOiJKT1NFIn0",
+          "eyJpc3N1ZWRBdCI6MTc1NzAzMDQwMCwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsInBheWVyIjoiMHhmNjg4YTI1ZGIwMjhkZTNmZmM2NzBjMGM1YTc5ZWUxYTVlOWJkOTBhIiwicmVzb3VyY2VVcmwiOiJodHRwczovL2Fnb3JldW0ueHl6L2VuL2FnZW50cy9leGFtcGxlLWFnZW50L3NlcnZpY2VzL2V4YW1wbGUtc2VydmljZSIsInRyYW5zYWN0aW9uIjoiMHg2NTQzODg0M2QyZTY5YTg1OWU5ZTA5OWVlYjkzNTcxYWU5ODNiZWU3OGQ2MTkwNTZlODI4M2E3YjBhMmE3YzJhIiwidmVyc2lvbiI6MX0",
+          "OnT8nwymqPKS9CKsFijpwgRGM7MsMUonkXu9nN7Zra4m9JjICOZOrqyUB3M2zrU9nVKrKNcOGqyR78uLUhMxDg"
+        ],
+        "did_document": {
+          "@context": [
+            "https://www.w3.org/ns/did/v1",
+            "https://w3id.org/security/suites/jws-2020/v1"
+          ],
+          "id": "did:web:evil.example",
+          "verificationMethod": [
+            {
+              "id": "did:web:vectors.example#A6EHv_POEL4dcN0Y",
+              "type": "JsonWebKey2020",
+              "controller": "did:web:vectors.example",
+              "publicKeyJwk": {
+                "kty": "OKP",
+                "crv": "Ed25519",
+                "x": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg",
+                "alg": "EdDSA",
+                "use": "sig"
+              }
+            }
+          ],
+          "assertionMethod": [
+            "did:web:vectors.example#A6EHv_POEL4dcN0Y"
+          ]
+        },
+        "expect_reason": "identifies itself as",
+        "why": "the document is not the one that should have been fetched, whatever it contains"
+      },
+      {
+        "name": "the key is published but not under assertionMethod",
+        "segments": [
+          "eyJhbGciOiJFZERTQSIsImtpZCI6ImRpZDp3ZWI6dmVjdG9ycy5leGFtcGxlI0E2RUh2X1BPRUw0ZGNOMFkiLCJ0eXAiOiJKT1NFIn0",
+          "eyJpc3N1ZWRBdCI6MTc1NzAzMDQwMCwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsInBheWVyIjoiMHhmNjg4YTI1ZGIwMjhkZTNmZmM2NzBjMGM1YTc5ZWUxYTVlOWJkOTBhIiwicmVzb3VyY2VVcmwiOiJodHRwczovL2Fnb3JldW0ueHl6L2VuL2FnZW50cy9leGFtcGxlLWFnZW50L3NlcnZpY2VzL2V4YW1wbGUtc2VydmljZSIsInRyYW5zYWN0aW9uIjoiMHg2NTQzODg0M2QyZTY5YTg1OWU5ZTA5OWVlYjkzNTcxYWU5ODNiZWU3OGQ2MTkwNTZlODI4M2E3YjBhMmE3YzJhIiwidmVyc2lvbiI6MX0",
+          "OnT8nwymqPKS9CKsFijpwgRGM7MsMUonkXu9nN7Zra4m9JjICOZOrqyUB3M2zrU9nVKrKNcOGqyR78uLUhMxDg"
+        ],
+        "did_document": {
+          "@context": [
+            "https://www.w3.org/ns/did/v1",
+            "https://w3id.org/security/suites/jws-2020/v1"
+          ],
+          "id": "did:web:vectors.example",
+          "verificationMethod": [
+            {
+              "id": "did:web:vectors.example#A6EHv_POEL4dcN0Y",
+              "type": "JsonWebKey2020",
+              "controller": "did:web:vectors.example",
+              "publicKeyJwk": {
+                "kty": "OKP",
+                "crv": "Ed25519",
+                "x": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg",
+                "alg": "EdDSA",
+                "use": "sig"
+              }
+            }
+          ],
+          "assertionMethod": []
+        },
+        "expect_reason": "assertionMethod",
+        "why": "a key in the document is not thereby authorised to make claims"
+      },
+      {
+        "name": "the key is authorised for authentication but not assertion",
+        "segments": [
+          "eyJhbGciOiJFZERTQSIsImtpZCI6ImRpZDp3ZWI6dmVjdG9ycy5leGFtcGxlI0E2RUh2X1BPRUw0ZGNOMFkiLCJ0eXAiOiJKT1NFIn0",
+          "eyJpc3N1ZWRBdCI6MTc1NzAzMDQwMCwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsInBheWVyIjoiMHhmNjg4YTI1ZGIwMjhkZTNmZmM2NzBjMGM1YTc5ZWUxYTVlOWJkOTBhIiwicmVzb3VyY2VVcmwiOiJodHRwczovL2Fnb3JldW0ueHl6L2VuL2FnZW50cy9leGFtcGxlLWFnZW50L3NlcnZpY2VzL2V4YW1wbGUtc2VydmljZSIsInRyYW5zYWN0aW9uIjoiMHg2NTQzODg0M2QyZTY5YTg1OWU5ZTA5OWVlYjkzNTcxYWU5ODNiZWU3OGQ2MTkwNTZlODI4M2E3YjBhMmE3YzJhIiwidmVyc2lvbiI6MX0",
+          "OnT8nwymqPKS9CKsFijpwgRGM7MsMUonkXu9nN7Zra4m9JjICOZOrqyUB3M2zrU9nVKrKNcOGqyR78uLUhMxDg"
+        ],
+        "did_document": {
+          "@context": [
+            "https://www.w3.org/ns/did/v1",
+            "https://w3id.org/security/suites/jws-2020/v1"
+          ],
+          "id": "did:web:vectors.example",
+          "verificationMethod": [
+            {
+              "id": "did:web:vectors.example#A6EHv_POEL4dcN0Y",
+              "type": "JsonWebKey2020",
+              "controller": "did:web:vectors.example",
+              "publicKeyJwk": {
+                "kty": "OKP",
+                "crv": "Ed25519",
+                "x": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg",
+                "alg": "EdDSA",
+                "use": "sig"
+              }
+            }
+          ],
+          "assertionMethod": [],
+          "authentication": [
+            "did:web:vectors.example#A6EHv_POEL4dcN0Y"
+          ]
+        },
+        "expect_reason": "assertionMethod",
+        "why": "the distinction Agoreum's own document draws deliberately. A verifier that ignores the relationship discards it"
+      }
+    ]
+  }
 }
