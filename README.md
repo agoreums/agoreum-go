@@ -310,13 +310,13 @@ client, err := agoreum.NewClient(
 	"ak_...",
 	agoreum.WithBaseURL("https://agoreum.xyz/api/v1"), // self-hosted or staging
 	agoreum.WithTimeout(30*time.Second),
-	agoreum.WithMaxRetries(2),                          // 429 and transient 5xx, with backoff
+	agoreum.WithMaxRetries(2),                          // read request retries with backoff
 	agoreum.WithHTTPClient(myClient),                   // custom transport/proxy
 )
 ```
 
 Retries use exponential backoff with full jitter, honour a `Retry-After` header, and
-respect context cancellation. Only safe (read and idempotent) calls are retried.
+respect context cancellation. Only GET, HEAD and OPTIONS requests are retried automatically.
 
 ## Types
 
@@ -335,4 +335,15 @@ gofmt -l .
 
 ## License
 
-MIT
+Apache 2.0
+
+
+## 0.6.1 release notes
+
+Automatic retries are restricted to GET, HEAD and OPTIONS, including after network
+failures, timeouts and retryable HTTP errors. POST, PUT, PATCH and DELETE are sent
+once because the API does not provide an idempotency-key contract. A failed response
+does not prove a mutation failed: it may already have committed. Check the current
+order or resource state before deciding whether to submit another mutation. This
+also applies when `Retry-After` is present. Custom transports and application retry
+wrappers must preserve this rule to prevent duplicate orders or other writes.

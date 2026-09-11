@@ -30,7 +30,7 @@ import (
 )
 
 // Version is the SDK version, sent in the User-Agent header.
-const Version = "0.6.0"
+const Version = "0.6.1"
 
 const (
 	defaultBaseURL    = "https://agoreum.xyz/api/v1"
@@ -39,7 +39,7 @@ const (
 	userAgent         = "agoreum-go/" + Version
 )
 
-// retryStatuses are retried with backoff for safe and idempotent calls.
+// retryStatuses are retried with backoff for read-only calls.
 var retryStatuses = map[int]bool{408: true, 429: true, 500: true, 502: true, 503: true, 504: true}
 
 // Client is an Agoreum API client. It is safe for concurrent use by multiple
@@ -83,7 +83,8 @@ func WithTimeout(d time.Duration) Option {
 	}
 }
 
-// WithMaxRetries sets how many times 429 and transient 5xx responses are retried.
+// WithMaxRetries sets retries for read-only requests after network failures,
+// 429 and transient 5xx responses. Mutation requests are sent once.
 func WithMaxRetries(n int) Option {
 	return func(c *Client) {
 		if n < 0 {
@@ -126,6 +127,13 @@ func (c *Client) Me(ctx context.Context) (Me, error) {
 // request performs one HTTP round trip with retries, returning the raw body bytes of
 // a successful response or a typed error.
 func (c *Client) request(ctx context.Context, method, path string, query url.Values, body any) ([]byte, error) {
+	// The API has no idempotency-key contract. A mutation may have committed
+	// before its response was lost, so sending it again can duplicate the work.
+	maxRetries := 0
+	switch strings.ToUpper(method) {
+	case http.MethodGet, http.MethodHead, http.MethodOptions:
+		maxRetries = c.maxRetries
+	}
 	full := c.baseURL + "/" + strings.TrimLeft(path, "/")
 	if len(query) > 0 {
 		full += "?" + query.Encode()
@@ -164,7 +172,7 @@ func (c *Client) request(ctx context.Context, method, path string, query url.Val
 				return nil, &ConnectionError{Timeout: true, err: ctx.Err()}
 			}
 			lastErr = &ConnectionError{Timeout: isTimeout(err), err: err}
-			if attempt <= c.maxRetries {
+			if attempt <= maxRetries {
 				if werr := wait(ctx, backoff(attempt, -1)); werr != nil {
 					return nil, werr
 				}
@@ -177,7 +185,7 @@ func (c *Client) request(ctx context.Context, method, path string, query url.Val
 		resp.Body.Close()
 		if readErr != nil {
 			lastErr = &ConnectionError{err: readErr}
-			if attempt <= c.maxRetries {
+			if attempt <= maxRetries {
 				if werr := wait(ctx, backoff(attempt, -1)); werr != nil {
 					return nil, werr
 				}
@@ -186,7 +194,7 @@ func (c *Client) request(ctx context.Context, method, path string, query url.Val
 			return nil, lastErr
 		}
 
-		if retryStatuses[resp.StatusCode] && attempt <= c.maxRetries {
+		if retryStatuses[resp.StatusCode] && attempt <= maxRetries {
 			retryAfter := parseRetryAfter(resp.Header.Get("Retry-After"))
 			if werr := wait(ctx, backoff(attempt, retryAfter)); werr != nil {
 				return nil, werr

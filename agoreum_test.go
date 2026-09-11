@@ -3,6 +3,7 @@ package agoreum
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -245,4 +246,54 @@ func asErr(err error, target **APIError) bool {
 		*target = e
 	}
 	return ok
+}
+
+func TestRetryPolicy(t *testing.T) {
+	for _, method := range []string{"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"} {
+		for _, failure := range []int{0, -1, 408, 429, 500, 502, 503, 504} {
+			t.Run(fmt.Sprintf("%s/%d", method, failure), func(t *testing.T) {
+				var calls atomic.Int32
+				c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+					if calls.Add(1) == 1 {
+						// Simulate a committed mutation followed by a lost response, including
+						// a connection closed partway through the response body.
+						if failure <= 0 {
+							conn, buf, err := w.(http.Hijacker).Hijack()
+							if err != nil {
+								t.Error(err)
+								return
+							}
+							if failure == -1 {
+								_, _ = buf.WriteString("HTTP/1.1 200 OK\r\nContent-Length: 100\r\n\r\n{")
+								_ = buf.Flush()
+							}
+							_ = conn.Close()
+							return
+						}
+						w.Header().Set("Retry-After", "0")
+						writeJSON(w, failure, `{ "error": { "code": "transient", "message": "Unavailable" } }`)
+						return
+					}
+					writeJSON(w, 200, `{ "ok": true }`)
+				})
+				_, err := c.request(context.Background(), method, "/orders", nil, nil)
+				readonly := method == "GET" || method == "HEAD" || method == "OPTIONS"
+				// HEAD has no response body, so a truncated body cannot fail that request.
+				bodyless := method == "HEAD" && failure == -1
+				wantCalls := int32(1)
+				if readonly && !bodyless {
+					wantCalls = 2
+				}
+				if readonly && err != nil {
+					t.Fatalf("read failed: %v", err)
+				}
+				if !readonly && err == nil {
+					t.Fatal("expected mutation error")
+				}
+				if calls.Load() != wantCalls {
+					t.Fatalf("calls = %d, want %d", calls.Load(), wantCalls)
+				}
+			})
+		}
+	}
 }
