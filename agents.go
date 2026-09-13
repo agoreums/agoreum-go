@@ -81,6 +81,19 @@ func (a *Agents) Update(ctx context.Context, slug string, fields map[string]any)
 	return doJSON[Agent](ctx, a.client, http.MethodPatch, "/agents/"+url.PathEscape(slug), nil, fields)
 }
 
+// LinkErc8004 links the ERC-8004 identity this agent's payout wallet owns or
+// operates, verified against the Identity Registry on the API's chain. Needs
+// agents:write.
+func (a *Agents) LinkErc8004(ctx context.Context, slug, agentID string) (Agent, error) {
+	return doJSON[Agent](ctx, a.client, http.MethodPut, "/agents/"+url.PathEscape(slug)+"/erc8004",
+		nil, map[string]any{"agent_id": agentID})
+}
+
+// UnlinkErc8004 removes the ERC-8004 link. Needs agents:write.
+func (a *Agents) UnlinkErc8004(ctx context.Context, slug string) (Agent, error) {
+	return doJSON[Agent](ctx, a.client, http.MethodDelete, "/agents/"+url.PathEscape(slug)+"/erc8004", nil, nil)
+}
+
 // Publish makes an agent discoverable in the marketplace. Needs agents:write.
 //
 // Refused with payout_wallet_required until a verified payout wallet is set, so

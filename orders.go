@@ -109,6 +109,76 @@ func (o *Orders) Events(ctx context.Context, orderID string) (OrderTimeline, err
 	return doJSON[OrderTimeline](ctx, o.client, http.MethodGet, "/orders/"+url.PathEscape(orderID)+"/events", nil, nil)
 }
 
+// PortableFeedbackEligibility says whether the caller may give ERC-8004
+// feedback on an order, with each refusal named.
+type PortableFeedbackEligibility struct {
+	Eligible         bool                `json:"eligible"`
+	Reasons          []map[string]string `json:"reasons"`
+	ChainID          int64               `json:"chain_id"`
+	NetworkName      string              `json:"network_name"`
+	IsTestnet        bool                `json:"is_testnet"`
+	Registry         *string             `json:"registry"`
+	IdentityRegistry *string             `json:"identity_registry"`
+	AgentID          *int64              `json:"agent_id"`
+	SettlementTxHash *string             `json:"settlement_tx_hash"`
+	Payer            *string             `json:"payer"`
+	Prepared         bool                `json:"prepared"`
+}
+
+// PortableFeedback is ERC-8004 feedback prepared for the buyer's wallet to
+// sign: the public file, its hash and URI, the registry and chain, the exact
+// calldata for giveFeedback, and what has been observed of it on chain.
+type PortableFeedback struct {
+	OrderID      string         `json:"order_id"`
+	ChainID      int64          `json:"chain_id"`
+	NetworkName  string         `json:"network_name"`
+	IsTestnet    bool           `json:"is_testnet"`
+	Registry     string         `json:"registry"`
+	Function     string         `json:"function"`
+	Selector     string         `json:"selector"`
+	Arguments    map[string]any `json:"arguments"`
+	Calldata     *string        `json:"calldata"`
+	Document     map[string]any `json:"document"`
+	FeedbackURI  *string        `json:"feedback_uri"`
+	FeedbackHash *string        `json:"feedback_hash"`
+	PreparedAt   *string        `json:"prepared_at"`
+	Onchain      map[string]any `json:"onchain"`
+	Summary      *string        `json:"summary"`
+	Note         string         `json:"note"`
+}
+
+// PortableFeedbackStatus is eligibility and, when prepared, the feedback.
+type PortableFeedbackStatus struct {
+	Eligibility PortableFeedbackEligibility `json:"eligibility"`
+	Feedback    *PortableFeedback           `json:"feedback"`
+}
+
+// PortableFeedback returns whether the caller may give ERC-8004 feedback on an
+// order, and the feedback if prepared. Feedback is a claim the buyer signs from
+// their own wallet with the settlement as proof of payment; it never touches
+// Agoreum's own reputation. Needs orders:read.
+func (o *Orders) PortableFeedback(ctx context.Context, orderID string) (PortableFeedbackStatus, error) {
+	return doJSON[PortableFeedbackStatus](ctx, o.client, http.MethodGet, "/orders/"+url.PathEscape(orderID)+"/portable-feedback", nil, nil)
+}
+
+// PreparePortableFeedback prepares ERC-8004 feedback for the buyer's wallet to
+// sign: value 0 to 100 and an optional comment. Nothing is sent; the wallet
+// sends Calldata to Registry, then RecordPortableFeedback verifies it.
+func (o *Orders) PreparePortableFeedback(ctx context.Context, orderID string, value int, comment string) (PortableFeedback, error) {
+	body := map[string]any{"value": value}
+	if comment != "" {
+		body["comment"] = comment
+	}
+	return doJSON[PortableFeedback](ctx, o.client, http.MethodPost, "/orders/"+url.PathEscape(orderID)+"/portable-feedback", nil, body)
+}
+
+// RecordPortableFeedback records the transaction the buyer's wallet sent,
+// after the API verifies its receipt carries the registry's NewFeedback with
+// this order's feedback hash.
+func (o *Orders) RecordPortableFeedback(ctx context.Context, orderID, txHash string) (PortableFeedback, error) {
+	return doJSON[PortableFeedback](ctx, o.client, http.MethodPost, "/orders/"+url.PathEscape(orderID)+"/portable-feedback/submitted", nil, map[string]any{"tx_hash": txHash})
+}
+
 // DeliverParams describes a delivery. Both fields are optional.
 type DeliverParams struct {
 	DeliveryNote  string

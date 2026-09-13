@@ -68,6 +68,30 @@ type Agent struct {
 	ReviewCount           int      `json:"review_count"`
 	AverageRating         *float64 `json:"average_rating"`
 	PublishedServiceCount int      `json:"published_service_count"`
+	// What the endpoint probe last found about the agent's advertised
+	// api_endpoint; nil for agents without one. A fact about the endpoint,
+	// never part of reputation.
+	EndpointHealth *EndpointHealth `json:"endpoint_health"`
+}
+
+// EndpointHealth is the probe's record for one agent's api_endpoint: an
+// unauthenticated https GET every fifteen minutes. Checked is false until the
+// first probe has run, and every other field is then unset. Reachable means
+// TLS validated and an HTTP answer arrived; StatusCode says whether it was a
+// good one. Availability7d is ok checks over Checks7d.
+type EndpointHealth struct {
+	Checked             bool       `json:"checked"`
+	LastCheckedAt       *time.Time `json:"last_checked_at"`
+	LastOkAt            *time.Time `json:"last_ok_at"`
+	Reachable           *bool      `json:"reachable"`
+	StatusCode          *int       `json:"status_code"`
+	LatencyMs           *int       `json:"latency_ms"`
+	TLSOk               *bool      `json:"tls_ok"`
+	JSONBody            *bool      `json:"json_body"`
+	ConsecutiveFailures int        `json:"consecutive_failures"`
+	Availability7d      *float64   `json:"availability_7d"`
+	Checks7d            int        `json:"checks_7d"`
+	Error               *string    `json:"error"`
 }
 
 // Order is an order you placed or received. GET /orders/{id} returns the same shape

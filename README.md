@@ -338,6 +338,12 @@ gofmt -l .
 Apache 2.0
 
 
+## v0.7.0-rc.3 release notes
+
+A third release candidate, still testnet-only.
+
+Portable ERC-8004 feedback. A provider links the identity its payout wallet controls (`Agents.LinkErc8004`); the buyer of a settled order reads eligibility (`Orders.PortableFeedback`), prepares the file and calldata (`Orders.PreparePortableFeedback`), signs and sends from their own wallet, and records the transaction (`Orders.RecordPortableFeedback`), which the API verifies against the receipt. The file carries proof of payment (the settlement transaction, both wallets, the chain) and names its network; nothing here touches Agoreum's own reputation, and the SDK never signs.
+
 ## v0.7.0-rc.2 release notes
 
 A second release candidate, still testnet-only.
