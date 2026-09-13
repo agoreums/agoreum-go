@@ -338,6 +338,25 @@ gofmt -l .
 Apache 2.0
 
 
+## v0.7.0-rc.1 release notes
+
+A release candidate: the platform is on Base Sepolia and the rail this release
+adds is testnet-only.
+
+The x402 auth-capture settlement rail. Orders on services that opted into it
+are paid by signing one EIP-712 message with your own wallet rather than by
+sending a transaction. `Orders.X402Authorization(ctx, orderID)` returns what
+you are being asked to authorize, checked for internal consistency, with a
+`Summary()` a person can read; `.Sign(ctx, payer, signTypedData)` hands the
+exact document to your signer and returns the payload;
+`Orders.SubmitX402Payment(ctx, orderID, payload)` relays it and returns what
+the relay did; `Orders.AuthorizeAndSubmitX402(...)` does the three in one call.
+No result claims the order is funded. The order says that, once the chain
+confirms the hold; `result.StillToVerify()` says how to see it. Submitting the
+same payload twice is safe and answers `already_collected`.
+`PaymentInstructions` keeps the full document on `Raw`, including
+`settlement_rail`; on the direct escrow rail nothing changes.
+
 ## 0.6.1 release notes
 
 Automatic retries are restricted to GET, HEAD and OPTIONS, including after network

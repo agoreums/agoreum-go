@@ -1,0 +1,1437 @@
+{
+  "_about": "Cross-SDK vector for the x402 auth-capture rail. Generated from the API's own bindings on 2026-09-12; the payload was verified by the API's verify_against_order and the signature recovers to the payer. Every SDK must build exactly expected_payload from instructions given the payer and signature, and refuse each entry in inconsistent_instructions before signing.",
+  "payer": "0xd5720A97E1672c2dEBf288Ae05565ddE0AD819e9",
+  "signature": "0xa8a68cec332bb2962da77ce6f045c3a65581ee85aa0bc7cd0bca670baff9eff375560c812d82cb4ac8e260a1ea66e2e39c9e78161713a4f8445d26b4fcfd03891c",
+  "instructions": {
+    "order_id": "0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+    "order_reference": "X402-VEC",
+    "settlement_rail": "x402-auth-capture",
+    "chain_id": 84532,
+    "network": "eip155:84532",
+    "network_name": "Base Sepolia",
+    "escrow_contract": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+    "operator_contract": "0x1111111111111111111111111111111111111111",
+    "token_collector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+    "token_address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    "token_symbol": "USDC",
+    "token_decimals": 6,
+    "provider_address": "0x3333333333333333333333333333333333333333",
+    "amount": "102.564102",
+    "amount_base_units": "102564102",
+    "delivery_window_seconds": 86400,
+    "auto_release_window_seconds": 604800,
+    "claim_lapse_seconds": 2592000,
+    "delivery_deadline": 1789387200,
+    "auto_release_at": 1789992000,
+    "authorization_expiry": 1792584000,
+    "payment_required": {
+      "x402Version": 2,
+      "resource": {
+        "url": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+        "description": "Agoreum order X402-VEC"
+      },
+      "accepts": [
+        {
+          "scheme": "auth-capture",
+          "network": "eip155:84532",
+          "amount": "102564102",
+          "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+          "payTo": "0x3333333333333333333333333333333333333333",
+          "maxTimeoutSeconds": 3600,
+          "extra": {
+            "name": "USDC",
+            "version": "2",
+            "captureAuthorizer": "0x1111111111111111111111111111111111111111",
+            "authCaptureEscrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+            "operatorType": "custom",
+            "paymentFlow": "escrow",
+            "assetTransferMethod": "eip3009",
+            "escrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+            "tokenCollector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+            "operator": "0x1111111111111111111111111111111111111111",
+            "paymentInfo": {
+              "operator": "0x1111111111111111111111111111111111111111",
+              "payer": "0x0000000000000000000000000000000000000000",
+              "receiver": "0x3333333333333333333333333333333333333333",
+              "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+              "maxAmount": "102564102",
+              "preApprovalExpiry": 1789300800,
+              "authorizationExpiry": 1792584000,
+              "refundExpiry": 1792584000,
+              "minFeeBps": 250,
+              "maxFeeBps": 250,
+              "feeReceiver": "0x4444444444444444444444444444444444444444",
+              "salt": "57639889986346215247209049758662232176026729488024139430314932919227996768762"
+            },
+            "terms": {
+              "orderId": "0x000000000000000000000000000000000f9a3c2e4b1d4e7a9c0b1a2b3c4d5e6f",
+              "deliveryDeadline": 1789387200,
+              "autoReleaseAt": 1789992000
+            },
+            "claimLapseSeconds": 2592000,
+            "captureDeadline": 1792584000,
+            "refundDeadline": 1792584000,
+            "minFeeBps": 250,
+            "maxFeeBps": 250,
+            "feeRecipient": "0x4444444444444444444444444444444444444444"
+          }
+        }
+      ]
+    },
+    "typed_data": {
+      "types": {
+        "EIP712Domain": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "version",
+            "type": "string"
+          },
+          {
+            "name": "chainId",
+            "type": "uint256"
+          },
+          {
+            "name": "verifyingContract",
+            "type": "address"
+          }
+        ],
+        "ReceiveWithAuthorization": [
+          {
+            "name": "from",
+            "type": "address"
+          },
+          {
+            "name": "to",
+            "type": "address"
+          },
+          {
+            "name": "value",
+            "type": "uint256"
+          },
+          {
+            "name": "validAfter",
+            "type": "uint256"
+          },
+          {
+            "name": "validBefore",
+            "type": "uint256"
+          },
+          {
+            "name": "nonce",
+            "type": "bytes32"
+          }
+        ]
+      },
+      "primaryType": "ReceiveWithAuthorization",
+      "domain": {
+        "name": "USDC",
+        "version": "2",
+        "chainId": 84532,
+        "verifyingContract": "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+      },
+      "message": {
+        "from": "0x0000000000000000000000000000000000000000",
+        "to": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+        "value": "102564102",
+        "validAfter": "0",
+        "validBefore": "1789300800",
+        "nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e"
+      }
+    },
+    "erc3009_nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e",
+    "payment_endpoint": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f/payment",
+    "funding_deadline": "2026-09-13T12:00:00Z",
+    "explorer_url": "https://sepolia.basescan.org",
+    "note": "vector"
+  },
+  "expected_payload": {
+    "x402Version": 2,
+    "accepted": {
+      "scheme": "auth-capture",
+      "network": "eip155:84532",
+      "amount": "102564102",
+      "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "payTo": "0x3333333333333333333333333333333333333333",
+      "maxTimeoutSeconds": 3600,
+      "extra": {
+        "name": "USDC",
+        "version": "2",
+        "captureAuthorizer": "0x1111111111111111111111111111111111111111",
+        "authCaptureEscrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+        "operatorType": "custom",
+        "paymentFlow": "escrow",
+        "assetTransferMethod": "eip3009",
+        "escrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+        "tokenCollector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+        "operator": "0x1111111111111111111111111111111111111111",
+        "paymentInfo": {
+          "operator": "0x1111111111111111111111111111111111111111",
+          "payer": "0x0000000000000000000000000000000000000000",
+          "receiver": "0x3333333333333333333333333333333333333333",
+          "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+          "maxAmount": "102564102",
+          "preApprovalExpiry": 1789300800,
+          "authorizationExpiry": 1792584000,
+          "refundExpiry": 1792584000,
+          "minFeeBps": 250,
+          "maxFeeBps": 250,
+          "feeReceiver": "0x4444444444444444444444444444444444444444",
+          "salt": "57639889986346215247209049758662232176026729488024139430314932919227996768762"
+        },
+        "terms": {
+          "orderId": "0x000000000000000000000000000000000f9a3c2e4b1d4e7a9c0b1a2b3c4d5e6f",
+          "deliveryDeadline": 1789387200,
+          "autoReleaseAt": 1789992000
+        },
+        "claimLapseSeconds": 2592000,
+        "captureDeadline": 1792584000,
+        "refundDeadline": 1792584000,
+        "minFeeBps": 250,
+        "maxFeeBps": 250,
+        "feeRecipient": "0x4444444444444444444444444444444444444444"
+      }
+    },
+    "payload": {
+      "authorization": {
+        "from": "0xd5720A97E1672c2dEBf288Ae05565ddE0AD819e9",
+        "to": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+        "value": "102564102",
+        "validAfter": "0",
+        "validBefore": "1789300800",
+        "nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e"
+      },
+      "signature": "0xa8a68cec332bb2962da77ce6f045c3a65581ee85aa0bc7cd0bca670baff9eff375560c812d82cb4ac8e260a1ea66e2e39c9e78161713a4f8445d26b4fcfd03891c",
+      "salt": "57639889986346215247209049758662232176026729488024139430314932919227996768762"
+    }
+  },
+  "payment_info_hash": "0xb99360d82c49bfd4dc68e0969199c7d22f7f92e6fadd9de7892018378a64ab2e",
+  "inconsistent_instructions": [
+    {
+      "why": "typed data value differs from amount_base_units",
+      "path": [
+        "typed_data",
+        "message",
+        "value"
+      ],
+      "instructions": {
+        "order_id": "0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+        "order_reference": "X402-VEC",
+        "settlement_rail": "x402-auth-capture",
+        "chain_id": 84532,
+        "network": "eip155:84532",
+        "network_name": "Base Sepolia",
+        "escrow_contract": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+        "operator_contract": "0x1111111111111111111111111111111111111111",
+        "token_collector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+        "token_address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "token_symbol": "USDC",
+        "token_decimals": 6,
+        "provider_address": "0x3333333333333333333333333333333333333333",
+        "amount": "102.564102",
+        "amount_base_units": "102564102",
+        "delivery_window_seconds": 86400,
+        "auto_release_window_seconds": 604800,
+        "claim_lapse_seconds": 2592000,
+        "delivery_deadline": 1789387200,
+        "auto_release_at": 1789992000,
+        "authorization_expiry": 1792584000,
+        "payment_required": {
+          "x402Version": 2,
+          "resource": {
+            "url": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+            "description": "Agoreum order X402-VEC"
+          },
+          "accepts": [
+            {
+              "scheme": "auth-capture",
+              "network": "eip155:84532",
+              "amount": "102564102",
+              "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+              "payTo": "0x3333333333333333333333333333333333333333",
+              "maxTimeoutSeconds": 3600,
+              "extra": {
+                "name": "USDC",
+                "version": "2",
+                "captureAuthorizer": "0x1111111111111111111111111111111111111111",
+                "authCaptureEscrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "operatorType": "custom",
+                "paymentFlow": "escrow",
+                "assetTransferMethod": "eip3009",
+                "escrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "tokenCollector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+                "operator": "0x1111111111111111111111111111111111111111",
+                "paymentInfo": {
+                  "operator": "0x1111111111111111111111111111111111111111",
+                  "payer": "0x0000000000000000000000000000000000000000",
+                  "receiver": "0x3333333333333333333333333333333333333333",
+                  "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+                  "maxAmount": "102564102",
+                  "preApprovalExpiry": 1789300800,
+                  "authorizationExpiry": 1792584000,
+                  "refundExpiry": 1792584000,
+                  "minFeeBps": 250,
+                  "maxFeeBps": 250,
+                  "feeReceiver": "0x4444444444444444444444444444444444444444",
+                  "salt": "57639889986346215247209049758662232176026729488024139430314932919227996768762"
+                },
+                "terms": {
+                  "orderId": "0x000000000000000000000000000000000f9a3c2e4b1d4e7a9c0b1a2b3c4d5e6f",
+                  "deliveryDeadline": 1789387200,
+                  "autoReleaseAt": 1789992000
+                },
+                "claimLapseSeconds": 2592000,
+                "captureDeadline": 1792584000,
+                "refundDeadline": 1792584000,
+                "minFeeBps": 250,
+                "maxFeeBps": 250,
+                "feeRecipient": "0x4444444444444444444444444444444444444444"
+              }
+            }
+          ]
+        },
+        "typed_data": {
+          "types": {
+            "EIP712Domain": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "version",
+                "type": "string"
+              },
+              {
+                "name": "chainId",
+                "type": "uint256"
+              },
+              {
+                "name": "verifyingContract",
+                "type": "address"
+              }
+            ],
+            "ReceiveWithAuthorization": [
+              {
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "name": "validAfter",
+                "type": "uint256"
+              },
+              {
+                "name": "validBefore",
+                "type": "uint256"
+              },
+              {
+                "name": "nonce",
+                "type": "bytes32"
+              }
+            ]
+          },
+          "primaryType": "ReceiveWithAuthorization",
+          "domain": {
+            "name": "USDC",
+            "version": "2",
+            "chainId": 84532,
+            "verifyingContract": "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+          },
+          "message": {
+            "from": "0x0000000000000000000000000000000000000000",
+            "to": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+            "value": "1",
+            "validAfter": "0",
+            "validBefore": "1789300800",
+            "nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e"
+          }
+        },
+        "erc3009_nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e",
+        "payment_endpoint": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f/payment",
+        "funding_deadline": "2026-09-13T12:00:00Z",
+        "explorer_url": "https://sepolia.basescan.org",
+        "note": "vector"
+      }
+    },
+    {
+      "why": "typed data chainId differs from chain_id",
+      "path": [
+        "typed_data",
+        "domain",
+        "chainId"
+      ],
+      "instructions": {
+        "order_id": "0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+        "order_reference": "X402-VEC",
+        "settlement_rail": "x402-auth-capture",
+        "chain_id": 84532,
+        "network": "eip155:84532",
+        "network_name": "Base Sepolia",
+        "escrow_contract": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+        "operator_contract": "0x1111111111111111111111111111111111111111",
+        "token_collector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+        "token_address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "token_symbol": "USDC",
+        "token_decimals": 6,
+        "provider_address": "0x3333333333333333333333333333333333333333",
+        "amount": "102.564102",
+        "amount_base_units": "102564102",
+        "delivery_window_seconds": 86400,
+        "auto_release_window_seconds": 604800,
+        "claim_lapse_seconds": 2592000,
+        "delivery_deadline": 1789387200,
+        "auto_release_at": 1789992000,
+        "authorization_expiry": 1792584000,
+        "payment_required": {
+          "x402Version": 2,
+          "resource": {
+            "url": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+            "description": "Agoreum order X402-VEC"
+          },
+          "accepts": [
+            {
+              "scheme": "auth-capture",
+              "network": "eip155:84532",
+              "amount": "102564102",
+              "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+              "payTo": "0x3333333333333333333333333333333333333333",
+              "maxTimeoutSeconds": 3600,
+              "extra": {
+                "name": "USDC",
+                "version": "2",
+                "captureAuthorizer": "0x1111111111111111111111111111111111111111",
+                "authCaptureEscrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "operatorType": "custom",
+                "paymentFlow": "escrow",
+                "assetTransferMethod": "eip3009",
+                "escrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "tokenCollector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+                "operator": "0x1111111111111111111111111111111111111111",
+                "paymentInfo": {
+                  "operator": "0x1111111111111111111111111111111111111111",
+                  "payer": "0x0000000000000000000000000000000000000000",
+                  "receiver": "0x3333333333333333333333333333333333333333",
+                  "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+                  "maxAmount": "102564102",
+                  "preApprovalExpiry": 1789300800,
+                  "authorizationExpiry": 1792584000,
+                  "refundExpiry": 1792584000,
+                  "minFeeBps": 250,
+                  "maxFeeBps": 250,
+                  "feeReceiver": "0x4444444444444444444444444444444444444444",
+                  "salt": "57639889986346215247209049758662232176026729488024139430314932919227996768762"
+                },
+                "terms": {
+                  "orderId": "0x000000000000000000000000000000000f9a3c2e4b1d4e7a9c0b1a2b3c4d5e6f",
+                  "deliveryDeadline": 1789387200,
+                  "autoReleaseAt": 1789992000
+                },
+                "claimLapseSeconds": 2592000,
+                "captureDeadline": 1792584000,
+                "refundDeadline": 1792584000,
+                "minFeeBps": 250,
+                "maxFeeBps": 250,
+                "feeRecipient": "0x4444444444444444444444444444444444444444"
+              }
+            }
+          ]
+        },
+        "typed_data": {
+          "types": {
+            "EIP712Domain": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "version",
+                "type": "string"
+              },
+              {
+                "name": "chainId",
+                "type": "uint256"
+              },
+              {
+                "name": "verifyingContract",
+                "type": "address"
+              }
+            ],
+            "ReceiveWithAuthorization": [
+              {
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "name": "validAfter",
+                "type": "uint256"
+              },
+              {
+                "name": "validBefore",
+                "type": "uint256"
+              },
+              {
+                "name": "nonce",
+                "type": "bytes32"
+              }
+            ]
+          },
+          "primaryType": "ReceiveWithAuthorization",
+          "domain": {
+            "name": "USDC",
+            "version": "2",
+            "chainId": 8453,
+            "verifyingContract": "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+          },
+          "message": {
+            "from": "0x0000000000000000000000000000000000000000",
+            "to": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+            "value": "102564102",
+            "validAfter": "0",
+            "validBefore": "1789300800",
+            "nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e"
+          }
+        },
+        "erc3009_nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e",
+        "payment_endpoint": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f/payment",
+        "funding_deadline": "2026-09-13T12:00:00Z",
+        "explorer_url": "https://sepolia.basescan.org",
+        "note": "vector"
+      }
+    },
+    {
+      "why": "typed data recipient is not the token collector",
+      "path": [
+        "typed_data",
+        "message",
+        "to"
+      ],
+      "instructions": {
+        "order_id": "0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+        "order_reference": "X402-VEC",
+        "settlement_rail": "x402-auth-capture",
+        "chain_id": 84532,
+        "network": "eip155:84532",
+        "network_name": "Base Sepolia",
+        "escrow_contract": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+        "operator_contract": "0x1111111111111111111111111111111111111111",
+        "token_collector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+        "token_address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "token_symbol": "USDC",
+        "token_decimals": 6,
+        "provider_address": "0x3333333333333333333333333333333333333333",
+        "amount": "102.564102",
+        "amount_base_units": "102564102",
+        "delivery_window_seconds": 86400,
+        "auto_release_window_seconds": 604800,
+        "claim_lapse_seconds": 2592000,
+        "delivery_deadline": 1789387200,
+        "auto_release_at": 1789992000,
+        "authorization_expiry": 1792584000,
+        "payment_required": {
+          "x402Version": 2,
+          "resource": {
+            "url": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+            "description": "Agoreum order X402-VEC"
+          },
+          "accepts": [
+            {
+              "scheme": "auth-capture",
+              "network": "eip155:84532",
+              "amount": "102564102",
+              "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+              "payTo": "0x3333333333333333333333333333333333333333",
+              "maxTimeoutSeconds": 3600,
+              "extra": {
+                "name": "USDC",
+                "version": "2",
+                "captureAuthorizer": "0x1111111111111111111111111111111111111111",
+                "authCaptureEscrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "operatorType": "custom",
+                "paymentFlow": "escrow",
+                "assetTransferMethod": "eip3009",
+                "escrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "tokenCollector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+                "operator": "0x1111111111111111111111111111111111111111",
+                "paymentInfo": {
+                  "operator": "0x1111111111111111111111111111111111111111",
+                  "payer": "0x0000000000000000000000000000000000000000",
+                  "receiver": "0x3333333333333333333333333333333333333333",
+                  "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+                  "maxAmount": "102564102",
+                  "preApprovalExpiry": 1789300800,
+                  "authorizationExpiry": 1792584000,
+                  "refundExpiry": 1792584000,
+                  "minFeeBps": 250,
+                  "maxFeeBps": 250,
+                  "feeReceiver": "0x4444444444444444444444444444444444444444",
+                  "salt": "57639889986346215247209049758662232176026729488024139430314932919227996768762"
+                },
+                "terms": {
+                  "orderId": "0x000000000000000000000000000000000f9a3c2e4b1d4e7a9c0b1a2b3c4d5e6f",
+                  "deliveryDeadline": 1789387200,
+                  "autoReleaseAt": 1789992000
+                },
+                "claimLapseSeconds": 2592000,
+                "captureDeadline": 1792584000,
+                "refundDeadline": 1792584000,
+                "minFeeBps": 250,
+                "maxFeeBps": 250,
+                "feeRecipient": "0x4444444444444444444444444444444444444444"
+              }
+            }
+          ]
+        },
+        "typed_data": {
+          "types": {
+            "EIP712Domain": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "version",
+                "type": "string"
+              },
+              {
+                "name": "chainId",
+                "type": "uint256"
+              },
+              {
+                "name": "verifyingContract",
+                "type": "address"
+              }
+            ],
+            "ReceiveWithAuthorization": [
+              {
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "name": "validAfter",
+                "type": "uint256"
+              },
+              {
+                "name": "validBefore",
+                "type": "uint256"
+              },
+              {
+                "name": "nonce",
+                "type": "bytes32"
+              }
+            ]
+          },
+          "primaryType": "ReceiveWithAuthorization",
+          "domain": {
+            "name": "USDC",
+            "version": "2",
+            "chainId": 84532,
+            "verifyingContract": "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+          },
+          "message": {
+            "from": "0x0000000000000000000000000000000000000000",
+            "to": "0x3333333333333333333333333333333333333333",
+            "value": "102564102",
+            "validAfter": "0",
+            "validBefore": "1789300800",
+            "nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e"
+          }
+        },
+        "erc3009_nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e",
+        "payment_endpoint": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f/payment",
+        "funding_deadline": "2026-09-13T12:00:00Z",
+        "explorer_url": "https://sepolia.basescan.org",
+        "note": "vector"
+      }
+    },
+    {
+      "why": "typed data verifyingContract is not the token",
+      "path": [
+        "typed_data",
+        "domain",
+        "verifyingContract"
+      ],
+      "instructions": {
+        "order_id": "0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+        "order_reference": "X402-VEC",
+        "settlement_rail": "x402-auth-capture",
+        "chain_id": 84532,
+        "network": "eip155:84532",
+        "network_name": "Base Sepolia",
+        "escrow_contract": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+        "operator_contract": "0x1111111111111111111111111111111111111111",
+        "token_collector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+        "token_address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "token_symbol": "USDC",
+        "token_decimals": 6,
+        "provider_address": "0x3333333333333333333333333333333333333333",
+        "amount": "102.564102",
+        "amount_base_units": "102564102",
+        "delivery_window_seconds": 86400,
+        "auto_release_window_seconds": 604800,
+        "claim_lapse_seconds": 2592000,
+        "delivery_deadline": 1789387200,
+        "auto_release_at": 1789992000,
+        "authorization_expiry": 1792584000,
+        "payment_required": {
+          "x402Version": 2,
+          "resource": {
+            "url": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+            "description": "Agoreum order X402-VEC"
+          },
+          "accepts": [
+            {
+              "scheme": "auth-capture",
+              "network": "eip155:84532",
+              "amount": "102564102",
+              "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+              "payTo": "0x3333333333333333333333333333333333333333",
+              "maxTimeoutSeconds": 3600,
+              "extra": {
+                "name": "USDC",
+                "version": "2",
+                "captureAuthorizer": "0x1111111111111111111111111111111111111111",
+                "authCaptureEscrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "operatorType": "custom",
+                "paymentFlow": "escrow",
+                "assetTransferMethod": "eip3009",
+                "escrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "tokenCollector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+                "operator": "0x1111111111111111111111111111111111111111",
+                "paymentInfo": {
+                  "operator": "0x1111111111111111111111111111111111111111",
+                  "payer": "0x0000000000000000000000000000000000000000",
+                  "receiver": "0x3333333333333333333333333333333333333333",
+                  "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+                  "maxAmount": "102564102",
+                  "preApprovalExpiry": 1789300800,
+                  "authorizationExpiry": 1792584000,
+                  "refundExpiry": 1792584000,
+                  "minFeeBps": 250,
+                  "maxFeeBps": 250,
+                  "feeReceiver": "0x4444444444444444444444444444444444444444",
+                  "salt": "57639889986346215247209049758662232176026729488024139430314932919227996768762"
+                },
+                "terms": {
+                  "orderId": "0x000000000000000000000000000000000f9a3c2e4b1d4e7a9c0b1a2b3c4d5e6f",
+                  "deliveryDeadline": 1789387200,
+                  "autoReleaseAt": 1789992000
+                },
+                "claimLapseSeconds": 2592000,
+                "captureDeadline": 1792584000,
+                "refundDeadline": 1792584000,
+                "minFeeBps": 250,
+                "maxFeeBps": 250,
+                "feeRecipient": "0x4444444444444444444444444444444444444444"
+              }
+            }
+          ]
+        },
+        "typed_data": {
+          "types": {
+            "EIP712Domain": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "version",
+                "type": "string"
+              },
+              {
+                "name": "chainId",
+                "type": "uint256"
+              },
+              {
+                "name": "verifyingContract",
+                "type": "address"
+              }
+            ],
+            "ReceiveWithAuthorization": [
+              {
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "name": "validAfter",
+                "type": "uint256"
+              },
+              {
+                "name": "validBefore",
+                "type": "uint256"
+              },
+              {
+                "name": "nonce",
+                "type": "bytes32"
+              }
+            ]
+          },
+          "primaryType": "ReceiveWithAuthorization",
+          "domain": {
+            "name": "USDC",
+            "version": "2",
+            "chainId": 84532,
+            "verifyingContract": "0x3333333333333333333333333333333333333333"
+          },
+          "message": {
+            "from": "0x0000000000000000000000000000000000000000",
+            "to": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+            "value": "102564102",
+            "validAfter": "0",
+            "validBefore": "1789300800",
+            "nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e"
+          }
+        },
+        "erc3009_nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e",
+        "payment_endpoint": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f/payment",
+        "funding_deadline": "2026-09-13T12:00:00Z",
+        "explorer_url": "https://sepolia.basescan.org",
+        "note": "vector"
+      }
+    },
+    {
+      "why": "typed data nonce differs from erc3009_nonce",
+      "path": [
+        "typed_data",
+        "message",
+        "nonce"
+      ],
+      "instructions": {
+        "order_id": "0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+        "order_reference": "X402-VEC",
+        "settlement_rail": "x402-auth-capture",
+        "chain_id": 84532,
+        "network": "eip155:84532",
+        "network_name": "Base Sepolia",
+        "escrow_contract": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+        "operator_contract": "0x1111111111111111111111111111111111111111",
+        "token_collector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+        "token_address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "token_symbol": "USDC",
+        "token_decimals": 6,
+        "provider_address": "0x3333333333333333333333333333333333333333",
+        "amount": "102.564102",
+        "amount_base_units": "102564102",
+        "delivery_window_seconds": 86400,
+        "auto_release_window_seconds": 604800,
+        "claim_lapse_seconds": 2592000,
+        "delivery_deadline": 1789387200,
+        "auto_release_at": 1789992000,
+        "authorization_expiry": 1792584000,
+        "payment_required": {
+          "x402Version": 2,
+          "resource": {
+            "url": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+            "description": "Agoreum order X402-VEC"
+          },
+          "accepts": [
+            {
+              "scheme": "auth-capture",
+              "network": "eip155:84532",
+              "amount": "102564102",
+              "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+              "payTo": "0x3333333333333333333333333333333333333333",
+              "maxTimeoutSeconds": 3600,
+              "extra": {
+                "name": "USDC",
+                "version": "2",
+                "captureAuthorizer": "0x1111111111111111111111111111111111111111",
+                "authCaptureEscrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "operatorType": "custom",
+                "paymentFlow": "escrow",
+                "assetTransferMethod": "eip3009",
+                "escrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "tokenCollector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+                "operator": "0x1111111111111111111111111111111111111111",
+                "paymentInfo": {
+                  "operator": "0x1111111111111111111111111111111111111111",
+                  "payer": "0x0000000000000000000000000000000000000000",
+                  "receiver": "0x3333333333333333333333333333333333333333",
+                  "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+                  "maxAmount": "102564102",
+                  "preApprovalExpiry": 1789300800,
+                  "authorizationExpiry": 1792584000,
+                  "refundExpiry": 1792584000,
+                  "minFeeBps": 250,
+                  "maxFeeBps": 250,
+                  "feeReceiver": "0x4444444444444444444444444444444444444444",
+                  "salt": "57639889986346215247209049758662232176026729488024139430314932919227996768762"
+                },
+                "terms": {
+                  "orderId": "0x000000000000000000000000000000000f9a3c2e4b1d4e7a9c0b1a2b3c4d5e6f",
+                  "deliveryDeadline": 1789387200,
+                  "autoReleaseAt": 1789992000
+                },
+                "claimLapseSeconds": 2592000,
+                "captureDeadline": 1792584000,
+                "refundDeadline": 1792584000,
+                "minFeeBps": 250,
+                "maxFeeBps": 250,
+                "feeRecipient": "0x4444444444444444444444444444444444444444"
+              }
+            }
+          ]
+        },
+        "typed_data": {
+          "types": {
+            "EIP712Domain": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "version",
+                "type": "string"
+              },
+              {
+                "name": "chainId",
+                "type": "uint256"
+              },
+              {
+                "name": "verifyingContract",
+                "type": "address"
+              }
+            ],
+            "ReceiveWithAuthorization": [
+              {
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "name": "validAfter",
+                "type": "uint256"
+              },
+              {
+                "name": "validBefore",
+                "type": "uint256"
+              },
+              {
+                "name": "nonce",
+                "type": "bytes32"
+              }
+            ]
+          },
+          "primaryType": "ReceiveWithAuthorization",
+          "domain": {
+            "name": "USDC",
+            "version": "2",
+            "chainId": 84532,
+            "verifyingContract": "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+          },
+          "message": {
+            "from": "0x0000000000000000000000000000000000000000",
+            "to": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+            "value": "102564102",
+            "validAfter": "0",
+            "validBefore": "1789300800",
+            "nonce": "0xabababababababababababababababababababababababababababababababab"
+          }
+        },
+        "erc3009_nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e",
+        "payment_endpoint": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f/payment",
+        "funding_deadline": "2026-09-13T12:00:00Z",
+        "explorer_url": "https://sepolia.basescan.org",
+        "note": "vector"
+      }
+    },
+    {
+      "why": "offer payTo differs from provider_address",
+      "path": [
+        "payment_required",
+        "accepts",
+        0,
+        "payTo"
+      ],
+      "instructions": {
+        "order_id": "0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+        "order_reference": "X402-VEC",
+        "settlement_rail": "x402-auth-capture",
+        "chain_id": 84532,
+        "network": "eip155:84532",
+        "network_name": "Base Sepolia",
+        "escrow_contract": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+        "operator_contract": "0x1111111111111111111111111111111111111111",
+        "token_collector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+        "token_address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "token_symbol": "USDC",
+        "token_decimals": 6,
+        "provider_address": "0x3333333333333333333333333333333333333333",
+        "amount": "102.564102",
+        "amount_base_units": "102564102",
+        "delivery_window_seconds": 86400,
+        "auto_release_window_seconds": 604800,
+        "claim_lapse_seconds": 2592000,
+        "delivery_deadline": 1789387200,
+        "auto_release_at": 1789992000,
+        "authorization_expiry": 1792584000,
+        "payment_required": {
+          "x402Version": 2,
+          "resource": {
+            "url": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+            "description": "Agoreum order X402-VEC"
+          },
+          "accepts": [
+            {
+              "scheme": "auth-capture",
+              "network": "eip155:84532",
+              "amount": "102564102",
+              "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+              "payTo": "0x4444444444444444444444444444444444444444",
+              "maxTimeoutSeconds": 3600,
+              "extra": {
+                "name": "USDC",
+                "version": "2",
+                "captureAuthorizer": "0x1111111111111111111111111111111111111111",
+                "authCaptureEscrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "operatorType": "custom",
+                "paymentFlow": "escrow",
+                "assetTransferMethod": "eip3009",
+                "escrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "tokenCollector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+                "operator": "0x1111111111111111111111111111111111111111",
+                "paymentInfo": {
+                  "operator": "0x1111111111111111111111111111111111111111",
+                  "payer": "0x0000000000000000000000000000000000000000",
+                  "receiver": "0x3333333333333333333333333333333333333333",
+                  "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+                  "maxAmount": "102564102",
+                  "preApprovalExpiry": 1789300800,
+                  "authorizationExpiry": 1792584000,
+                  "refundExpiry": 1792584000,
+                  "minFeeBps": 250,
+                  "maxFeeBps": 250,
+                  "feeReceiver": "0x4444444444444444444444444444444444444444",
+                  "salt": "57639889986346215247209049758662232176026729488024139430314932919227996768762"
+                },
+                "terms": {
+                  "orderId": "0x000000000000000000000000000000000f9a3c2e4b1d4e7a9c0b1a2b3c4d5e6f",
+                  "deliveryDeadline": 1789387200,
+                  "autoReleaseAt": 1789992000
+                },
+                "claimLapseSeconds": 2592000,
+                "captureDeadline": 1792584000,
+                "refundDeadline": 1792584000,
+                "minFeeBps": 250,
+                "maxFeeBps": 250,
+                "feeRecipient": "0x4444444444444444444444444444444444444444"
+              }
+            }
+          ]
+        },
+        "typed_data": {
+          "types": {
+            "EIP712Domain": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "version",
+                "type": "string"
+              },
+              {
+                "name": "chainId",
+                "type": "uint256"
+              },
+              {
+                "name": "verifyingContract",
+                "type": "address"
+              }
+            ],
+            "ReceiveWithAuthorization": [
+              {
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "name": "validAfter",
+                "type": "uint256"
+              },
+              {
+                "name": "validBefore",
+                "type": "uint256"
+              },
+              {
+                "name": "nonce",
+                "type": "bytes32"
+              }
+            ]
+          },
+          "primaryType": "ReceiveWithAuthorization",
+          "domain": {
+            "name": "USDC",
+            "version": "2",
+            "chainId": 84532,
+            "verifyingContract": "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+          },
+          "message": {
+            "from": "0x0000000000000000000000000000000000000000",
+            "to": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+            "value": "102564102",
+            "validAfter": "0",
+            "validBefore": "1789300800",
+            "nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e"
+          }
+        },
+        "erc3009_nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e",
+        "payment_endpoint": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f/payment",
+        "funding_deadline": "2026-09-13T12:00:00Z",
+        "explorer_url": "https://sepolia.basescan.org",
+        "note": "vector"
+      }
+    },
+    {
+      "why": "offer amount differs from amount_base_units",
+      "path": [
+        "payment_required",
+        "accepts",
+        0,
+        "amount"
+      ],
+      "instructions": {
+        "order_id": "0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+        "order_reference": "X402-VEC",
+        "settlement_rail": "x402-auth-capture",
+        "chain_id": 84532,
+        "network": "eip155:84532",
+        "network_name": "Base Sepolia",
+        "escrow_contract": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+        "operator_contract": "0x1111111111111111111111111111111111111111",
+        "token_collector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+        "token_address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "token_symbol": "USDC",
+        "token_decimals": 6,
+        "provider_address": "0x3333333333333333333333333333333333333333",
+        "amount": "102.564102",
+        "amount_base_units": "102564102",
+        "delivery_window_seconds": 86400,
+        "auto_release_window_seconds": 604800,
+        "claim_lapse_seconds": 2592000,
+        "delivery_deadline": 1789387200,
+        "auto_release_at": 1789992000,
+        "authorization_expiry": 1792584000,
+        "payment_required": {
+          "x402Version": 2,
+          "resource": {
+            "url": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+            "description": "Agoreum order X402-VEC"
+          },
+          "accepts": [
+            {
+              "scheme": "auth-capture",
+              "network": "eip155:84532",
+              "amount": "1",
+              "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+              "payTo": "0x3333333333333333333333333333333333333333",
+              "maxTimeoutSeconds": 3600,
+              "extra": {
+                "name": "USDC",
+                "version": "2",
+                "captureAuthorizer": "0x1111111111111111111111111111111111111111",
+                "authCaptureEscrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "operatorType": "custom",
+                "paymentFlow": "escrow",
+                "assetTransferMethod": "eip3009",
+                "escrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "tokenCollector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+                "operator": "0x1111111111111111111111111111111111111111",
+                "paymentInfo": {
+                  "operator": "0x1111111111111111111111111111111111111111",
+                  "payer": "0x0000000000000000000000000000000000000000",
+                  "receiver": "0x3333333333333333333333333333333333333333",
+                  "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+                  "maxAmount": "102564102",
+                  "preApprovalExpiry": 1789300800,
+                  "authorizationExpiry": 1792584000,
+                  "refundExpiry": 1792584000,
+                  "minFeeBps": 250,
+                  "maxFeeBps": 250,
+                  "feeReceiver": "0x4444444444444444444444444444444444444444",
+                  "salt": "57639889986346215247209049758662232176026729488024139430314932919227996768762"
+                },
+                "terms": {
+                  "orderId": "0x000000000000000000000000000000000f9a3c2e4b1d4e7a9c0b1a2b3c4d5e6f",
+                  "deliveryDeadline": 1789387200,
+                  "autoReleaseAt": 1789992000
+                },
+                "claimLapseSeconds": 2592000,
+                "captureDeadline": 1792584000,
+                "refundDeadline": 1792584000,
+                "minFeeBps": 250,
+                "maxFeeBps": 250,
+                "feeRecipient": "0x4444444444444444444444444444444444444444"
+              }
+            }
+          ]
+        },
+        "typed_data": {
+          "types": {
+            "EIP712Domain": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "version",
+                "type": "string"
+              },
+              {
+                "name": "chainId",
+                "type": "uint256"
+              },
+              {
+                "name": "verifyingContract",
+                "type": "address"
+              }
+            ],
+            "ReceiveWithAuthorization": [
+              {
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "name": "validAfter",
+                "type": "uint256"
+              },
+              {
+                "name": "validBefore",
+                "type": "uint256"
+              },
+              {
+                "name": "nonce",
+                "type": "bytes32"
+              }
+            ]
+          },
+          "primaryType": "ReceiveWithAuthorization",
+          "domain": {
+            "name": "USDC",
+            "version": "2",
+            "chainId": 84532,
+            "verifyingContract": "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+          },
+          "message": {
+            "from": "0x0000000000000000000000000000000000000000",
+            "to": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+            "value": "102564102",
+            "validAfter": "0",
+            "validBefore": "1789300800",
+            "nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e"
+          }
+        },
+        "erc3009_nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e",
+        "payment_endpoint": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f/payment",
+        "funding_deadline": "2026-09-13T12:00:00Z",
+        "explorer_url": "https://sepolia.basescan.org",
+        "note": "vector"
+      }
+    },
+    {
+      "why": "authorization_expiry is not auto_release_at plus claim lapse",
+      "path": [
+        "authorization_expiry"
+      ],
+      "instructions": {
+        "order_id": "0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+        "order_reference": "X402-VEC",
+        "settlement_rail": "x402-auth-capture",
+        "chain_id": 84532,
+        "network": "eip155:84532",
+        "network_name": "Base Sepolia",
+        "escrow_contract": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+        "operator_contract": "0x1111111111111111111111111111111111111111",
+        "token_collector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+        "token_address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "token_symbol": "USDC",
+        "token_decimals": 6,
+        "provider_address": "0x3333333333333333333333333333333333333333",
+        "amount": "102.564102",
+        "amount_base_units": "102564102",
+        "delivery_window_seconds": 86400,
+        "auto_release_window_seconds": 604800,
+        "claim_lapse_seconds": 2592000,
+        "delivery_deadline": 1789387200,
+        "auto_release_at": 1789992000,
+        "authorization_expiry": 1792584001,
+        "payment_required": {
+          "x402Version": 2,
+          "resource": {
+            "url": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f",
+            "description": "Agoreum order X402-VEC"
+          },
+          "accepts": [
+            {
+              "scheme": "auth-capture",
+              "network": "eip155:84532",
+              "amount": "102564102",
+              "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+              "payTo": "0x3333333333333333333333333333333333333333",
+              "maxTimeoutSeconds": 3600,
+              "extra": {
+                "name": "USDC",
+                "version": "2",
+                "captureAuthorizer": "0x1111111111111111111111111111111111111111",
+                "authCaptureEscrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "operatorType": "custom",
+                "paymentFlow": "escrow",
+                "assetTransferMethod": "eip3009",
+                "escrow": "0xf96815976523E00e65Be8f34cA5e64b4f41EB19c",
+                "tokenCollector": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+                "operator": "0x1111111111111111111111111111111111111111",
+                "paymentInfo": {
+                  "operator": "0x1111111111111111111111111111111111111111",
+                  "payer": "0x0000000000000000000000000000000000000000",
+                  "receiver": "0x3333333333333333333333333333333333333333",
+                  "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+                  "maxAmount": "102564102",
+                  "preApprovalExpiry": 1789300800,
+                  "authorizationExpiry": 1792584000,
+                  "refundExpiry": 1792584000,
+                  "minFeeBps": 250,
+                  "maxFeeBps": 250,
+                  "feeReceiver": "0x4444444444444444444444444444444444444444",
+                  "salt": "57639889986346215247209049758662232176026729488024139430314932919227996768762"
+                },
+                "terms": {
+                  "orderId": "0x000000000000000000000000000000000f9a3c2e4b1d4e7a9c0b1a2b3c4d5e6f",
+                  "deliveryDeadline": 1789387200,
+                  "autoReleaseAt": 1789992000
+                },
+                "claimLapseSeconds": 2592000,
+                "captureDeadline": 1792584000,
+                "refundDeadline": 1792584000,
+                "minFeeBps": 250,
+                "maxFeeBps": 250,
+                "feeRecipient": "0x4444444444444444444444444444444444444444"
+              }
+            }
+          ]
+        },
+        "typed_data": {
+          "types": {
+            "EIP712Domain": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "version",
+                "type": "string"
+              },
+              {
+                "name": "chainId",
+                "type": "uint256"
+              },
+              {
+                "name": "verifyingContract",
+                "type": "address"
+              }
+            ],
+            "ReceiveWithAuthorization": [
+              {
+                "name": "from",
+                "type": "address"
+              },
+              {
+                "name": "to",
+                "type": "address"
+              },
+              {
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "name": "validAfter",
+                "type": "uint256"
+              },
+              {
+                "name": "validBefore",
+                "type": "uint256"
+              },
+              {
+                "name": "nonce",
+                "type": "bytes32"
+              }
+            ]
+          },
+          "primaryType": "ReceiveWithAuthorization",
+          "domain": {
+            "name": "USDC",
+            "version": "2",
+            "chainId": 84532,
+            "verifyingContract": "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+          },
+          "message": {
+            "from": "0x0000000000000000000000000000000000000000",
+            "to": "0x8612dfdc421f80336cd14E8EF9cb1E765dB5ab88",
+            "value": "102564102",
+            "validAfter": "0",
+            "validBefore": "1789300800",
+            "nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e"
+          }
+        },
+        "erc3009_nonce": "0xeb6485fd1ae78205052d1b65ae612933a85a5c175851f79a0f8aa7037f31585e",
+        "payment_endpoint": "https://api.agoreum.xyz/api/v1/orders/0f9a3c2e-4b1d-4e7a-9c0b-1a2b3c4d5e6f/payment",
+        "funding_deadline": "2026-09-13T12:00:00Z",
+        "explorer_url": "https://sepolia.basescan.org",
+        "note": "vector"
+      }
+    }
+  ]
+}
