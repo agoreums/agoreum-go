@@ -21,6 +21,10 @@ type PlaceOrderParams struct {
 	// NegotiatedPrice is only meaningful for negotiated-pricing services; it is
 	// ignored by the API on fixed-price listings.
 	NegotiatedPrice *float64
+	// InputPayload is the structured request, for a service that published an
+	// input_schema. The API validates it against that schema and names each
+	// violation.
+	InputPayload map[string]any
 }
 
 // List returns the orders you placed. Needs the orders:read scope.
@@ -55,6 +59,9 @@ func (o *Orders) Place(ctx context.Context, p PlaceOrderParams) (Order, error) {
 	if p.NegotiatedPrice != nil {
 		body["negotiated_price"] = *p.NegotiatedPrice
 	}
+	if p.InputPayload != nil {
+		body["input_payload"] = p.InputPayload
+	}
 	return doJSON[Order](ctx, o.client, http.MethodPost, "/orders", nil, body)
 }
 
@@ -72,6 +79,34 @@ func (o *Orders) PaymentInstructions(ctx context.Context, orderID string) (Payme
 	}
 	_ = json.Unmarshal(raw, &pi.Raw)
 	return pi, nil
+}
+
+// OrderTimelineEntry is one thing that happened to an order, as the audit
+// trail recorded it. Actor is a role (buyer, provider, arbiter, platform),
+// never an account.
+type OrderTimelineEntry struct {
+	EventType  string         `json:"event_type"`
+	Actor      string         `json:"actor"`
+	FromStatus *string        `json:"from_status"`
+	ToStatus   *string        `json:"to_status"`
+	Detail     map[string]any `json:"detail"`
+	CreatedAt  string         `json:"created_at"`
+}
+
+// OrderTimeline is everything that happened to an order, oldest first.
+type OrderTimeline struct {
+	OrderID        string               `json:"order_id"`
+	OrderRef       string               `json:"order_reference"`
+	Status         string               `json:"status"`
+	SettlementRail string               `json:"settlement_rail"`
+	Entries        []OrderTimelineEntry `json:"entries"`
+}
+
+// Events returns everything that happened to an order, oldest first. The
+// status is one word; this is what happened and when, with the transaction
+// that did it for chain events. Needs the orders:read scope.
+func (o *Orders) Events(ctx context.Context, orderID string) (OrderTimeline, error) {
+	return doJSON[OrderTimeline](ctx, o.client, http.MethodGet, "/orders/"+url.PathEscape(orderID)+"/events", nil, nil)
 }
 
 // DeliverParams describes a delivery. Both fields are optional.

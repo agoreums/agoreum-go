@@ -338,6 +338,18 @@ gofmt -l .
 Apache 2.0
 
 
+## v0.7.0-rc.2 release notes
+
+A second release candidate, still testnet-only.
+
+`Orders.Events(ctx, orderID)` returns everything that happened to an order, oldest first: each step with its actor as a role and, for chain events, the transaction that carried it. Read it to learn which fact has occurred rather than inferring it from the status word.
+
+`PlaceOrderParams.InputPayload` sends the structured request for a service
+that published an `input_schema`; the API validates it against that schema and
+refuses with each violation's path and keyword. A delivery's `output_payload`
+is validated against `output_schema` the same way. Services without schemas
+are unchanged.
+
 ## v0.7.0-rc.1 release notes
 
 A release candidate: the platform is on Base Sepolia and the rail this release
