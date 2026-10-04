@@ -131,9 +131,11 @@ _, err = client.Services.Publish(ctx, agent.Slug, service.Slug)
 ```
 
 On the other side of a sale, `Orders.Start` accepts a funded order and
-`Orders.Deliver` marks it delivered, which starts the auto release window frozen
-onto the order when it was bought. Neither moves money: release is an on-chain
-transaction, and no API call can sign one.
+`Orders.Deliver` marks it delivered. Neither moves money. On contracts with
+on-chain delivery (mainnet launches with them), auto-release pays the provider
+without the buyer only once delivery is also recorded on chain before the
+deadline: `Orders.SignAndRecordDelivery(ctx, orderID, sign)` signs
+the statement with your own signer and Agoreum relays it, paying the gas.
 
 ## Placing and funding an order
 
@@ -337,6 +339,12 @@ gofmt -l .
 
 Apache 2.0
 
+
+## v0.7.0-rc.4 release notes
+
+A fourth release candidate, still testnet-only.
+
+Recording delivery on chain, for providers. On contracts with on-chain delivery (mainnet launches with them), auto-release pays a provider without the buyer only once delivery is recorded on chain before the delivery deadline, and a recorded delivery stops the buyer taking delivered work back with a refund. `Orders.DeliverySignature` returns the EIP-712 statement and `delivered_at`; `Orders.RecordDelivery` relays a signature, with Agoreum paying the gas and no money moving; `Orders.SignAndRecordDelivery` does both with your own signer and signs nothing when delivery is already recorded. The SDK never sees a key.
 
 ## v0.7.0-rc.3 release notes
 

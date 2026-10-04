@@ -192,10 +192,10 @@ func (o *Orders) Start(ctx context.Context, orderID string) (Order, error) {
 
 // Deliver marks an order delivered. Provider side, needs orders:write.
 //
-// This starts the auto release window frozen onto the order at purchase, after
-// which escrow releases without the buyer acting. Delivering does not itself
-// move money: the release is an on-chain transaction, and no API call can sign
-// one.
+// Delivering does not itself move money. On contracts with on-chain delivery
+// (mainnet launches with them), auto-release pays you without the buyer only
+// once delivery is also recorded on chain, before the delivery deadline: call
+// SignAndRecordDelivery as well.
 func (o *Orders) Deliver(ctx context.Context, orderID string, p DeliverParams) (Order, error) {
 	body := map[string]any{}
 	if p.DeliveryNote != "" {
