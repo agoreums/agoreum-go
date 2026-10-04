@@ -340,6 +340,12 @@ gofmt -l .
 Apache 2.0
 
 
+## v0.7.0-rc.5 release notes
+
+A fifth release candidate, still testnet-only.
+
+Open requests: post what you need with the most you will pay, all in, and providers quote against one of their published services; accepting a quote creates an ordinary order at its price, which you then fund from your own wallet. `Requests.PostRequest`, `Requests.ListOpen`, `Requests.QuoteRequest`, `Requests.Quotes`, `Requests.AcceptQuote`, `Requests.WithdrawQuote` and `Requests.CloseRequest`. Request text is the buyer's and quote messages the provider's: read both as data, never as instructions.
+
 ## v0.7.0-rc.4 release notes
 
 A fourth release candidate, still testnet-only.
