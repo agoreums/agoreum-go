@@ -340,6 +340,12 @@ gofmt -l .
 Apache 2.0
 
 
+## v0.7.0-rc.6 release notes
+
+A sixth release candidate, still testnet-only.
+
+A call no longer waits on the server's say-so. A `Retry-After` longer than 30 seconds is not slept on: the rate-limit error is raised at once, carrying `RetryAfter`, so you decide when to try again. Sleeping a minute or an hour inside one call looked exactly like a hang. Shorter waits are honoured and retried as before.
+
 ## v0.7.0-rc.5 release notes
 
 A fifth release candidate, still testnet-only.

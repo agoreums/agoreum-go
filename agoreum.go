@@ -30,7 +30,7 @@ import (
 )
 
 // Version is the SDK version, sent in the User-Agent header.
-const Version = "0.7.0-rc.5"
+const Version = "0.7.0-rc.6"
 
 const (
 	defaultBaseURL    = "https://agoreum.xyz/api/v1"
@@ -199,10 +199,12 @@ func (c *Client) request(ctx context.Context, method, path string, query url.Val
 
 		if retryStatuses[resp.StatusCode] && attempt <= maxRetries {
 			retryAfter := parseRetryAfter(resp.Header.Get("Retry-After"))
-			if werr := wait(ctx, backoff(attempt, retryAfter)); werr != nil {
-				return nil, werr
+			if !waitsTooLong(retryAfter) {
+				if werr := wait(ctx, backoff(attempt, retryAfter)); werr != nil {
+					return nil, werr
+				}
+				continue
 			}
-			continue
 		}
 
 		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
@@ -259,6 +261,18 @@ func parseRetryAfter(header string) float64 {
 		return -1
 	}
 	return seconds
+}
+
+// maxRetryAfterSeconds is the longest Retry-After the client sleeps on by
+// itself. A server asking for longer gets the rate-limit error back, carrying
+// RetryAfter, so the caller decides; sleeping a minute or an hour inside one
+// call looks to the caller exactly like a hang.
+const maxRetryAfterSeconds = 30.0
+
+// waitsTooLong reports whether a parsed Retry-After (negative when absent) is
+// longer than the client sleeps on by itself.
+func waitsTooLong(retryAfter float64) bool {
+	return retryAfter > maxRetryAfterSeconds
 }
 
 // backoff returns the delay before an attempt (1-based). A non-negative retryAfter
