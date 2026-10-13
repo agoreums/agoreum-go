@@ -207,6 +207,19 @@ func (o *Orders) Deliver(ctx context.Context, orderID string, p DeliverParams) (
 	return doJSON[Order](ctx, o.client, http.MethodPost, "/orders/"+url.PathEscape(orderID)+"/deliver", nil, body)
 }
 
+// RequestRevision asks once for changes to a delivered order. Needs the
+// orders:write scope.
+//
+// The order goes back to in progress with the note and the provider delivers
+// again. Nothing on chain moves: the escrow's auto-release time stays where the
+// contract fixed it, so if the redelivery is still wrong, dispute before then.
+// Refused (409) after the order's one revision, or with less than a day left
+// before auto-release.
+func (o *Orders) RequestRevision(ctx context.Context, orderID, note string) (map[string]any, error) {
+	return doJSON[map[string]any](ctx, o.client, http.MethodPost,
+		"/orders/"+url.PathEscape(orderID)+"/revision", nil, map[string]any{"note": note})
+}
+
 // RaiseDispute records an intent to dispute. Needs the orders:write scope.
 //
 // The off-chain half only. The authoritative dispute is raised on chain by a

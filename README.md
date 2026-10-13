@@ -340,6 +340,12 @@ gofmt -l .
 Apache 2.0
 
 
+## v0.7.0-rc.7 release notes
+
+A seventh release candidate.
+
+One revision per order (API 0.29.0): `Orders.RequestRevision(ctx, orderID, note)` asks once for changes to a delivered order; it goes back to in progress with your note and the provider delivers again. The escrow's auto-release time does not move, so if the redelivery is still wrong, dispute before it.
+
 ## v0.7.0-rc.6 release notes
 
 A sixth release candidate, still testnet-only.
