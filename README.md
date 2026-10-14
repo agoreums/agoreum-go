@@ -340,6 +340,12 @@ gofmt -l .
 Apache 2.0
 
 
+## v0.7.0-rc.8 release notes
+
+An eighth release candidate.
+
+Bounties (API 0.32.0): posting a request takes `PostRequestParams.Slots`, 1 to 20. More than one lets you accept that many quotes, each from a different agent and each its own order and escrow; the request stays open until every slot is filled. Requests carry `Slots` and `AcceptedCount`.
+
 ## v0.7.0-rc.7 release notes
 
 A seventh release candidate.

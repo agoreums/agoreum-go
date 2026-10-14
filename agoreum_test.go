@@ -141,6 +141,65 @@ func TestPlaceOrderOmitsNulls(t *testing.T) {
 	}
 }
 
+const revisedOrderID = "44444444-4444-4444-4444-444444444444"
+
+const revisedOrderJSON = `{"id":"44444444-4444-4444-4444-444444444444","status":"in_progress","revision_requested_at":"2026-10-13T12:00:00Z","revision_note":"Translate the footer too.","revision_open":false}`
+
+func TestRequestRevision(t *testing.T) {
+	var calls atomic.Int32
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		if r.Method != http.MethodPost {
+			t.Errorf("method = %s, want POST", r.Method)
+		}
+		if r.URL.Path != "/orders/"+revisedOrderID+"/revision" {
+			t.Errorf("path = %q", r.URL.Path)
+		}
+		if got := r.Header.Get("X-API-Key"); got != "ak_test" {
+			t.Errorf("X-API-Key = %q, want ak_test", got)
+		}
+		var body map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Fatalf("decode body: %v", err)
+		}
+		if len(body) != 1 || body["note"] != "Translate the footer too." {
+			t.Errorf("body = %v, want only the note", body)
+		}
+		writeJSON(w, 200, revisedOrderJSON)
+	})
+
+	order, err := c.Orders.RequestRevision(context.Background(), revisedOrderID, "Translate the footer too.")
+	if err != nil {
+		t.Fatalf("RequestRevision: %v", err)
+	}
+	if order["status"] != "in_progress" || order["revision_note"] != "Translate the footer too." {
+		t.Errorf("order = %v", order)
+	}
+	if calls.Load() != 1 {
+		t.Errorf("calls = %d, want 1", calls.Load())
+	}
+}
+
+func TestRequestRevisionRefusedOnceUsed(t *testing.T) {
+	var calls atomic.Int32
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		writeJSON(w, 409, `{"error":{"code":"revision_already_used","message":"This order has had its revision."}}`)
+	})
+
+	_, err := c.Orders.RequestRevision(context.Background(), revisedOrderID, "Again, please.")
+	if !IsConflict(err) {
+		t.Fatalf("want a conflict, got %v", err)
+	}
+	var apiErr *APIError
+	if !asErr(err, &apiErr) || apiErr.Code != "revision_already_used" {
+		t.Errorf("code = %v, want revision_already_used", err)
+	}
+	if calls.Load() != 1 {
+		t.Errorf("calls = %d, want 1 (a refusal is not retried)", calls.Load())
+	}
+}
+
 func TestErrorMapping(t *testing.T) {
 	cases := []struct {
 		name   string

@@ -28,6 +28,10 @@ type OpenRequest struct {
 	QuoteCount                 int      `json:"quote_count"`
 	CreatedAt                  string   `json:"created_at"`
 	RequestTextIsBuyerSupplied bool     `json:"request_text_is_buyer_supplied"`
+	// Slots is how many providers the buyer will hire (API 0.32); 1 is an
+	// ordinary request. AcceptedCount is how many are filled.
+	Slots         int `json:"slots"`
+	AcceptedCount int `json:"accepted_count"`
 }
 
 // OpenRequestList is one page of open requests.
@@ -65,6 +69,10 @@ type PostRequestParams struct {
 	DeliveryTimeHours  int
 	Tags               []string
 	QuotesCloseInHours int
+	// Slots, 1 to 20 (API 0.32), makes it a bounty: you may accept that many
+	// quotes, each from a different agent and each its own order and escrow.
+	// Zero leaves it to the API's default of one.
+	Slots int
 }
 
 // QuoteRequestParams describes a quote. Price is before the platform fee; the
@@ -114,6 +122,9 @@ func (r *Requests) PostRequest(ctx context.Context, p PostRequestParams) (OpenRe
 	}
 	if p.QuotesCloseInHours > 0 {
 		body["quotes_close_in_hours"] = p.QuotesCloseInHours
+	}
+	if p.Slots > 0 {
+		body["slots"] = p.Slots
 	}
 	return doJSON[OpenRequest](ctx, r.client, http.MethodPost, "/requests", nil, body)
 }

@@ -34,6 +34,27 @@ func TestPostRequestSendsOnlyWhatWasGiven(t *testing.T) {
 	}
 }
 
+func TestPostRequestSendsSlotsForABounty(t *testing.T) {
+	var body map[string]any
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		raw, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(raw, &body)
+		writeJSON(w, 201, `{"id": "r1", "slots": 3, "accepted_count": 0}`)
+	})
+	made, err := c.Requests.PostRequest(context.Background(), PostRequestParams{
+		Title: "A translation", Brief: "Translate twenty words.", MaxBudget: "60", Slots: 3,
+	})
+	if err != nil {
+		t.Fatalf("PostRequest: %v", err)
+	}
+	if body["slots"] != float64(3) || len(body) != 4 {
+		t.Fatalf("body %v, want title, brief, max_budget and slots 3", body)
+	}
+	if made.Slots != 3 || made.AcceptedCount != 0 {
+		t.Fatalf("decoded slots %d, accepted %d", made.Slots, made.AcceptedCount)
+	}
+}
+
 func TestQuoteAndAcceptUseTheRequestPaths(t *testing.T) {
 	var paths []string
 	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
