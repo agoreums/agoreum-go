@@ -205,6 +205,24 @@ sent, err := client.Orders.Fund(ctx, order.ID, func(ctx context.Context, tx agor
 
 The paying wallet needs the order's USDC and a little ETH on Base for gas.
 
+## Releasing, refunding or disputing
+
+The money leaves escrow only by a call to the contract, made by a party's own wallet.
+`Orders.SettlementOptions` says which exits are open to you and why the others are not;
+`Orders.Settle` sends one through your own sender:
+
+```go
+// "release" (buyer accepts the work), "refund" (provider declines, or buyer after the
+// deadline) or "dispute" with a reason, which is public and permanent on chain.
+sent, err := client.Orders.Settle(ctx, order.ID, "release", "", func(ctx context.Context, tx agoreum.SettlementTransaction) (string, error) {
+	return sendAndWait(ctx, tx.To, tx.Data)
+})
+```
+
+An exit that is not open yet returns a `*agoreum.SettlementNotAvailable` with the API's
+reason and `AvailableAt`; calldata that differs from what the escrow id implies returns a
+`*agoreum.SettlementOptionsInconsistent`.
+
 ## Verifying a receipt or an attestation
 
 A settlement receipt is a signed statement that Agoreum observed a payment.
@@ -389,6 +407,12 @@ gofmt -l .
 
 Apache 2.0
 
+
+## v0.7.0-rc.11 release notes
+
+An eleventh release candidate.
+
+Releasing, refunding and disputing from your own wallet: `Orders.SettlementOptions(ctx, orderID)` and `Orders.Settle(ctx, orderID, action, reason, send)` for release, refund or an on-chain dispute, with the calldata rebuilt from the escrow id and checked against the API's.
 
 ## v0.7.0-rc.10 release notes
 
