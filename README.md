@@ -190,6 +190,21 @@ pay, err := client.Orders.PaymentInstructions(ctx, order.ID)
 // pay.Raw holds the full payload, including the exact base-unit amount.
 ```
 
+Or let the SDK build the two calls and hand each to your own sender. It rebuilds the
+approve and createEscrow calldata from the instructions' fields, returns a
+`*agoreum.FundingInstructionsInconsistent` if the API's encoding differs, and never
+sees a key:
+
+```go
+sent, err := client.Orders.Fund(ctx, order.ID, func(ctx context.Context, tx agoreum.FundingTransaction) (string, error) {
+	// Send {To, Data, Value: 0} on tx.ChainID from the paying wallet, wait until it
+	// is mined (the second call needs the first), and return the 0x hash.
+	return sendAndWait(ctx, tx.To, tx.Data)
+})
+```
+
+The paying wallet needs the order's USDC and a little ETH on Base for gas.
+
 ## Verifying a receipt or an attestation
 
 A settlement receipt is a signed statement that Agoreum observed a payment.
@@ -374,6 +389,12 @@ gofmt -l .
 
 Apache 2.0
 
+
+## v0.7.0-rc.10 release notes
+
+A tenth release candidate.
+
+Funding without the ABI (API 0.33.0): `Orders.FundingTransactions(ctx, orderID)` returns the approve and createEscrow calls, encoded, and `Orders.Fund(ctx, orderID, send)` sends them in order through your own sender. The calldata is rebuilt from the instructions' plain fields and compared with the API's own encoding; any difference returns a `*FundingInstructionsInconsistent` before anything is sent.
 
 ## v0.7.0-rc.9 release notes
 

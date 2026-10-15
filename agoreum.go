@@ -31,7 +31,7 @@ import (
 )
 
 // Version is the SDK version, sent in the User-Agent header.
-const Version = "0.7.0-rc.9"
+const Version = "0.7.0-rc.10"
 
 const (
 	defaultBaseURL    = "https://agoreum.xyz/api/v1"
