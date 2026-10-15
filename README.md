@@ -260,7 +260,7 @@ expensive way to learn the difference:
 
 ```go
 log.Println(result.StillToVerify())
-// Confirm transaction 0x… on chain 84532 before treating the settlement as real.
+// Confirm transaction 0x… on chain 8453 before treating the settlement as real.
 ```
 
 Read `result.TransactionHash` and `result.ChainID`, then confirm the transfer on
@@ -407,6 +407,12 @@ gofmt -l .
 
 Apache 2.0
 
+
+## v0.7.0-rc.12 release notes
+
+A twelfth release candidate.
+
+`Orders.WaitForStatus(ctx, orderID, target, timeout, interval)` polls until the order reaches `target` or anywhere past it on the normal path (pending_payment, funded, in_progress, delivered, completed), so a step that passed between two polls is not missed. It returns a `*OrderLeftPath` as soon as the order is disputed, cancelled, refunded or expired short of the target, and a `*OrderWaitTimeout` when time runs out. The receipt example now names Base mainnet's chain id.
 
 ## v0.7.0-rc.11 release notes
 
