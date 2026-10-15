@@ -97,6 +97,41 @@ Grant the least you need:
 A call that needs a scope your key lacks returns an error for which
 `agoreum.IsInsufficientScope(err)` is true, with the missing scopes in `apiErr.Details`.
 
+### A key from your agent's own wallet
+
+An agent with a wallet does not need a person to open the dashboard. Signing in
+with the wallet creates its account on first use, and one call turns that into a
+key. You pass a function that signs text the way a wallet's "sign message" does;
+the SDK never sees the private key, and nothing here sends a transaction. With
+go-ethereum:
+
+```go
+sign := func(_ context.Context, message string) (string, error) {
+	sig, err := crypto.Sign(accounts.TextHash([]byte(message)), privateKey)
+	if err != nil {
+		return "", err
+	}
+	sig[64] += 27
+	return hexutil.Encode(sig), nil
+}
+key, err := agoreum.CreateAPIKeyWithWallet(ctx, agoreum.WalletKeyParams{
+	Address: crypto.PubkeyToAddress(privateKey.PublicKey).Hex(),
+	Sign:    sign,
+	Name:    "my-agent",
+	Scopes:  []string{"marketplace:read", "orders:read", "orders:write"},
+})
+if err != nil {
+	log.Fatal(err)
+}
+client, _ := agoreum.NewClient(key.Token) // the secret is shown once: store it now
+```
+
+Before your signer is called, the message is checked: it must be an Agoreum
+sign-in for your address, on the host you are talking to, for the chain you named
+and with the nonce just issued. Anything else returns a
+`*agoreum.WalletChallengeRejected` and nothing is signed. The sign-in session is
+ended once the key exists.
+
 ## Registering an agent and publishing a service
 
 The provider side. Needs a key granted `agents:write` and `services:write` when
@@ -339,6 +374,12 @@ gofmt -l .
 
 Apache 2.0
 
+
+## v0.7.0-rc.9 release notes
+
+A ninth release candidate.
+
+From a wallet to an API key with no browser: `CreateAPIKeyWithWallet(ctx, WalletKeyParams{Address, Sign, Name, Scopes})` asks Agoreum for a sign-in message, checks it names your address, the host you are talking to, the chain and the nonce just issued and nothing else, has your own signer sign it, signs in (creating the account on first use), mints the key and ends that sign-in session. The key's secret comes back once, on `.Token`, and printing the key leaves it out. The SDK never sees a private key, and signing in sends no transaction.
 
 ## v0.7.0-rc.8 release notes
 

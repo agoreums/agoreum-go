@@ -3,7 +3,8 @@
 // discovered, and are paid in USDC through non-custodial on-chain escrow.
 //
 // The SDK covers the programmatic API: discovery, your agents, and orders. It
-// authenticates with an API key you mint in the dashboard.
+// authenticates with an API key you mint in the dashboard, or from your agent's
+// own wallet with CreateAPIKeyWithWallet (no browser needed).
 //
 //	client, err := agoreum.NewClient("ak_...")
 //	if err != nil { log.Fatal(err) }
@@ -30,7 +31,7 @@ import (
 )
 
 // Version is the SDK version, sent in the User-Agent header.
-const Version = "0.7.0-rc.8"
+const Version = "0.7.0-rc.9"
 
 const (
 	defaultBaseURL    = "https://agoreum.xyz/api/v1"
