@@ -25,6 +25,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // MaxSafeInteger is JavaScript's Number.MAX_SAFE_INTEGER. Past this an integer
@@ -218,11 +219,17 @@ func (r ReceiptVerification) StillToVerify() string {
 }
 
 // JWK is one key from the document at /.well-known/agoreum-receipts.json.
+//
+// ValidFrom and ValidUntil are the window the key signed in, ISO 8601 UTC, nil
+// for an open side. A key vouches only for documents issued inside its window.
 type JWK struct {
-	Kty string `json:"kty"`
-	Crv string `json:"crv"`
-	Kid string `json:"kid"`
-	X   string `json:"x"`
+	Kty        string  `json:"kty"`
+	Crv        string  `json:"crv"`
+	Kid        string  `json:"kid"`
+	X          string  `json:"x"`
+	Status     string  `json:"status,omitempty"`
+	ValidFrom  *string `json:"valid_from,omitempty"`
+	ValidUntil *string `json:"valid_until,omitempty"`
 }
 
 // KeyDocument is that document.
@@ -316,9 +323,69 @@ func VerifyReceipt(doc ReceiptDocument, keys KeyDocument) ReceiptVerification {
 			result.DocumentType + "'s canonical form"
 		return result
 	}
+	if outside := outsideWindow(*jwk, payload, result.DocumentType, doc.KeyID); outside != "" {
+		result.Reason = outside
+		return result
+	}
 
 	result.SignatureValid = true
 	return result
+}
+
+// moment reads an ISO 8601 time as Agoreum writes it ("Z" or "+00:00",
+// fractional seconds optional). ok is false when absent or unreadable.
+func moment(value any) (t time.Time, ok bool) {
+	text, isString := value.(string)
+	if !isString || text == "" {
+		return time.Time{}, false
+	}
+	t, err := time.Parse(time.RFC3339Nano, text)
+	return t, err == nil
+}
+
+// outsideWindow says why the key may not vouch for this document, or "" when
+// it may.
+//
+// Without this check a retired key that leaked could sign a document dated
+// today and have it verify, because a key is never removed from the published
+// set. It does not stop a forger who backdates into the window; no offline
+// check can, and confirming the named transaction on chain is what catches
+// that. Agoreum's own verifier and the Python and TypeScript SDKs apply the
+// same rule.
+func outsideWindow(key JWK, payload map[string]any, documentType, keyID string) string {
+	startText, endText := "", ""
+	if key.ValidFrom != nil {
+		startText = *key.ValidFrom
+	}
+	if key.ValidUntil != nil {
+		endText = *key.ValidUntil
+	}
+	if startText == "" && endText == "" {
+		return ""
+	}
+	start, startOK := moment(startText)
+	end, endOK := moment(endText)
+	if (startText != "" && !startOK) || (endText != "" && !endOK) {
+		return fmt.Sprintf("the key document gives key %q a validity window that is "+
+			"not a readable ISO 8601 time, so what it may vouch for is unknown", keyID)
+	}
+	issued, ok := moment(payload["issued_at"])
+	if !ok {
+		return fmt.Sprintf("key %q is published with a validity window, and the %s "+
+			"carries no readable issued_at to check against it", keyID, documentType)
+	}
+	if (startOK && issued.Before(start)) || (endOK && issued.After(end)) {
+		open := func(s string) string {
+			if s == "" {
+				return "open"
+			}
+			return s
+		}
+		return fmt.Sprintf("the %s says it was issued at %v, outside the window key %q "+
+			"was used in (%s to %s)", documentType, payload["issued_at"], keyID,
+			open(startText), open(endText))
+	}
+	return ""
 }
 
 // AgoreumDID is the DID Agoreum signs x402 receipts under.

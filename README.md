@@ -408,6 +408,12 @@ gofmt -l .
 Apache 2.0
 
 
+## v0.7.0-rc.13 release notes
+
+A thirteenth release candidate.
+
+A key vouches only inside its published window. The key document at `/.well-known/agoreum-receipts.json` gives each key a `valid_from` and `valid_until` (null for an open side); `VerifyReceipt` now refuses a receipt or attestation whose `issued_at` falls outside its key's window, one with a window but no readable `issued_at`, and a window that is not a readable time. An open window, which is every key today, changes nothing. This stops a leaked retired key signing a receipt dated after its retirement; it cannot stop one backdated into the window, which is what checking the named transaction on chain is for.
+
 ## v0.7.0-rc.12 release notes
 
 A twelfth release candidate.

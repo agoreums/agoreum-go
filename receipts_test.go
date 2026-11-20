@@ -236,6 +236,116 @@ func TestAnUnsignedReceiptIsNotTreatedAsValid(t *testing.T) {
 	}
 }
 
+// The key document publishes the window each key signed in. A retired key is
+// never removed, so without the window a retired key that leaked could sign a
+// receipt dated today and have it verify. Every refusal below is checked
+// against the same document verifying once the window is taken away, so a
+// refusal for some other reason cannot pass for the window doing its job.
+//
+// The server writes issued_at with Python's isoformat ("+00:00" and
+// microseconds) and publishes windows with "Z"; both are read.
+const windowIssued = "2026-11-01T12:00:00.123456+00:00"
+
+func strp(s string) *string { return &s }
+
+// signedWithWindow returns a receipt issued at issuedAt ("" for none), the key
+// document with the given window, and the same key with its window open.
+func signedWithWindow(t *testing.T, issuedAt string, from, until *string) (ReceiptDocument, KeyDocument, KeyDocument) {
+	t.Helper()
+	pub, priv, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	payload := map[string]any{
+		"type":       "https://agoreum.xyz/schemas/settlement-receipt-v1",
+		"settlement": map[string]any{"chain_id": float64(8453), "transaction_hash": "0xabc"},
+	}
+	if issuedAt != "" {
+		payload["issued_at"] = issuedAt
+	}
+	message, err := CanonicalReceipt(payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	kid := b64(pub)[:16]
+	key := JWK{Kty: "OKP", Crv: "Ed25519", Kid: kid, X: b64(pub), Status: "retired"}
+	windowed := key
+	windowed.ValidFrom, windowed.ValidUntil = from, until
+	return ReceiptDocument{Receipt: payload, Signature: b64(ed25519.Sign(priv, message)), KeyID: kid},
+		KeyDocument{Keys: []JWK{windowed}}, KeyDocument{Keys: []JWK{key}}
+}
+
+func TestAnOpenWindowAcceptsADocumentWithNoIssueTime(t *testing.T) {
+	doc, _, open := signedWithWindow(t, "", nil, nil)
+	if r := VerifyReceipt(doc, open); !r.SignatureValid {
+		t.Fatalf("expected a valid receipt, got %+v", r)
+	}
+}
+
+func TestADocumentIssuedInsideTheWindowVerifies(t *testing.T) {
+	doc, keys, _ := signedWithWindow(t, windowIssued, strp("2026-10-06T00:00:00Z"), strp("2026-12-01T00:00:00Z"))
+	if r := VerifyReceipt(doc, keys); !r.SignatureValid || r.Reason != "" {
+		t.Fatalf("expected a valid receipt, got %+v", r)
+	}
+}
+
+func TestADocumentIssuedOutsideTheWindowIsRefused(t *testing.T) {
+	cases := []struct {
+		name        string
+		from, until *string
+	}{
+		{"issued after the key was retired", strp("2026-10-06T00:00:00Z"), strp("2026-11-01T12:00:00Z")},
+		{"issued before the key started signing", strp("2026-11-02T00:00:00Z"), nil},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			doc, keys, open := signedWithWindow(t, windowIssued, c.from, c.until)
+			r := VerifyReceipt(doc, keys)
+			if r.SignatureValid || !strings.Contains(r.Reason, "outside the window") {
+				t.Fatalf("expected an outside-the-window refusal, got %+v", r)
+			}
+			if !VerifyReceipt(doc, open).SignatureValid {
+				t.Fatal("the same document must verify once the window is open")
+			}
+		})
+	}
+}
+
+func TestAWindowWithNoIssueTimeIsRefused(t *testing.T) {
+	doc, keys, open := signedWithWindow(t, "", strp("2026-10-06T00:00:00Z"), nil)
+	r := VerifyReceipt(doc, keys)
+	if r.SignatureValid || !strings.Contains(r.Reason, "no readable issued_at") {
+		t.Fatalf("expected a no-issue-time refusal, got %+v", r)
+	}
+	if !VerifyReceipt(doc, open).SignatureValid {
+		t.Fatal("the same document must verify once the window is open")
+	}
+}
+
+func TestAnUnreadableWindowIsRefusedNotIgnored(t *testing.T) {
+	doc, keys, open := signedWithWindow(t, windowIssued, strp("last spring"), nil)
+	r := VerifyReceipt(doc, keys)
+	if r.SignatureValid || !strings.Contains(r.Reason, "not a readable ISO 8601 time") {
+		t.Fatalf("expected an unreadable-window refusal, got %+v", r)
+	}
+	if !VerifyReceipt(doc, open).SignatureValid {
+		t.Fatal("the same document must verify once the window is open")
+	}
+}
+
+func TestAKeyDocumentWithWindowsDecodes(t *testing.T) {
+	// The shape the server publishes: null for an open side.
+	var doc KeyDocument
+	raw := `{"keys":[{"kty":"OKP","crv":"Ed25519","kid":"k","x":"x","status":"retired","valid_from":"2026-10-06T00:00:00Z","valid_until":null}]}`
+	if err := json.Unmarshal([]byte(raw), &doc); err != nil {
+		t.Fatal(err)
+	}
+	k := doc.Keys[0]
+	if k.ValidFrom == nil || *k.ValidFrom != "2026-10-06T00:00:00Z" || k.ValidUntil != nil || k.Status != "retired" {
+		t.Fatalf("decoded %+v", k)
+	}
+}
+
 // A settlement receipt and a reputation attestation are the same object: same
 // key, same canonical form, same key document. Verifying one and not the other
 // would mean two implementations of an identical check, and the hard half of
